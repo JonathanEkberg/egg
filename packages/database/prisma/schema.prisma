@@ -1,0 +1,120 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER     @map("user")
+  RESELLER @map("reseller")
+  ADMIN    @map("admin")
+
+  @@map("role")
+}
+
+model User {
+  id        String   @id @default(uuid(7))
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  role     UserRole @default(USER)
+  name     String
+  email    String
+  password String
+
+  orders            Order[]
+  reviews           Review[]
+  shoppingCartItems ShoppingCartItem[]
+
+  @@map("user")
+}
+
+model Order {
+  id        String   @id @default(uuid(7))
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @map("user_id")
+
+  productOrder ProductOrder[]
+
+  @@map("order")
+}
+
+model ProductOrder {
+  id        String   @id @default(uuid(7))
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  amount   Int
+  priceUsd Decimal @map("price_usd")
+
+  order   Order  @relation(fields: [orderId], references: [id])
+  orderId String @map("order_id")
+
+  product   Product @relation(fields: [productId], references: [id])
+  productId String  @map("product_id")
+
+  @@map("product_order")
+}
+
+model Product {
+  id        String   @id @default(uuid(7))
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  name        String
+  description String?
+  imageUrl    String  @map("image_url")
+  priceUsd    Decimal @map("price_usd")
+  stock       Int
+
+  productOrders     ProductOrder[]
+  reviews           Review[]
+  shoppingCartItems ShoppingCartItem[]
+
+  @@map("product")
+}
+
+model Review {
+  id        String   @id @default(uuid(7))
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  stars Int
+  text  String
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @map("user_id")
+
+  product   Product @relation(fields: [productId], references: [id])
+  productId String  @map("product_id")
+
+  @@map("review")
+}
+
+model ShoppingCartItem {
+  id        String   @id @default(uuid(7))
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  amount Int
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @map("user_id")
+
+  product   Product @relation(fields: [productId], references: [id])
+  productId String  @map("product_id")
+
+  @@map("shopping_cart_item")
+}

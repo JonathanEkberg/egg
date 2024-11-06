@@ -1,0 +1,33 @@
+# Database
+* Postgres
+* Relations
+* 3NF compliant
+
+# API's
+* CRUD operations
+
+# Authentication
+* Support creation of users with email and password
+* Use basic authentication. Use username password to authenticate
+
+# Authorization
+* Access control: Regular user, admin, super user
+
+
+### GRADE 4
+
+# External service
+* Emailing OR S3 storage OR Social login
+
+# Advanced authentication
+* OAuth or JWT
+
+# Automatic testing
+* Full test 1 module in project
+
+
+### GRADE 5
+
+* "Microservice architecture". Single database is fine but services should talk to each other
+* Modern authentication. 2FA
+

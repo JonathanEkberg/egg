@@ -1,0 +1,21 @@
+{
+  "name": "@egg/database",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "push": "prisma db push",
+    "generate": "prisma generate --no-hints"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.21.1"
+  },
+  "devDependencies": {
+    "@egg/tsconfig": "workspace:*",
+    "@types/node": "^20.11.10",
+    "prisma": "^5.21.1",
+    "typescript": "^5"
+  }
+}
