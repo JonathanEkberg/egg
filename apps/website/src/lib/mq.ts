@@ -2,7 +2,7 @@ import * as amqp from "amqplib"
 
 const EMAIL_QUEUE = "email_queue"
 const EMAIL_EXCHANGE = "email"
-const EMAIL_ROUTING_KEY = "email_route"
+const EMAIL_ROUTING_KEY = ""
 
 const conn = await amqp.connect("amqp://localhost:5672")
 let channel: amqp.Channel | undefined
@@ -13,7 +13,7 @@ async function getChannel() {
   }
 
   await channel.assertExchange(EMAIL_EXCHANGE, "direct"),
-    await channel.assertQueue(EMAIL_QUEUE)
+    await channel.assertQueue(EMAIL_QUEUE, { durable: false })
   await channel.bindQueue(EMAIL_QUEUE, EMAIL_EXCHANGE, EMAIL_ROUTING_KEY)
   return channel
 }
