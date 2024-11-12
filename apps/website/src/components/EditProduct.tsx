@@ -1,4 +1,4 @@
-import { pool } from "@/lib/database"
+// import { pool } from "@/lib/database"
 import { revalidatePath, revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
 import {
@@ -65,10 +65,10 @@ export async function editProduct(formData: FormData) {
   const values = [name, description, image, price, stock, id]
   console.log("Creating product with values:", values)
 
-  await pool.execute(
-    `UPDATE product SET name=?, description=?, image=?, price_usd=?, stock=? WHERE id=?;`,
-    values,
-  )
+  // await pool.execute(
+  //   `UPDATE product SET name=?, description=?, image=?, price_usd=?, stock=? WHERE id=?;`,
+  //   values,
+  // )
   revalidateTag("products")
   revalidatePath("/")
   redirect("/")

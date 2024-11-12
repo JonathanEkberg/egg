@@ -1,17 +1,6 @@
 "use client"
 import React from "react"
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
-import { Button } from "./ui/button"
-import { logoutAction } from "@/app/actions"
-import { useRouter } from "next/navigation"
-import { getCookie } from "cookies-next"
-import {
-  Menubar,
-  MenubarContent,
-  MenubarItem,
-  MenubarMenu,
-  MenubarTrigger,
-} from "./ui/menubar"
+import { usePathname, useRouter } from "next/navigation"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,31 +10,39 @@ import {
 } from "./ui/dropdown-menu"
 import Link from "next/link"
 import { LogOut } from "lucide-react"
+import type { UserRole } from "@egg/database"
+import { trpc } from "@/server/trpc/client"
 
 interface UserButtonProps {
   name: string
+  role: UserRole
 }
 
-export function UserButton({ name }: UserButtonProps) {
+export function UserButton({ name, role }: UserButtonProps) {
   const router = useRouter()
-  const role = getCookie("u_role", { httpOnly: false })
+  const utils = trpc.useUtils()
+  const logout = trpc.auth.logout.useMutation({
+    onSuccess(data, variables, context) {
+      utils.user.getMe.reset()
+      router.refresh()
+    },
+  })
 
   async function onClick() {
-    await logoutAction()
-    router.refresh()
+    logout.mutate()
   }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
-        <div className="text-xl font-bold tracking-tighter">{name}</div>
+        <div className="text-2xl font-bold tracking-tighter">{name}</div>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuItem asChild>
           <Link href="/orders">My orders</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        {role === "ADMIN" && (
+        {role !== "user" && (
           <>
             <DropdownMenuItem asChild>
               <Link href="/admin">Admin dashboard</Link>

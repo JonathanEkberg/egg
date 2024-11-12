@@ -11,12 +11,12 @@ import {
   DialogFooter,
 } from "../ui/dialog"
 import { Textarea } from "../ui/textarea"
-import { makeReviewAction } from "@/app/actions"
+// import { makeReviewAction } from "@/app/actions"
 import { toast } from "sonner"
 import { Label } from "../ui/label"
 
 interface MakeReviewButtonProps {
-  productId: number
+  productId: string
 }
 
 export function MakeReviewButton({ productId }: MakeReviewButtonProps) {
@@ -38,7 +38,7 @@ export function MakeReviewButton({ productId }: MakeReviewButtonProps) {
       form.set("stars", String(stars))
       form.set("review", reviewInput.value)
       form.set("productId", String(productId))
-      await makeReviewAction(form)
+      // await makeReviewAction(form)
       setOpen(false)
     } catch (e) {
       if (e instanceof Error) {

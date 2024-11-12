@@ -1,92 +1,69 @@
+"use client"
 import React from "react"
-import { pool } from "@/lib/database"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
+import { ButtonLoader } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { cookies } from "next/headers"
-import { RedirectType, redirect } from "next/navigation"
-import {
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { useRouter } from "next/navigation"
+import { CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Star } from "lucide-react"
 import { ReviewImage } from "@/components/ReviewImage"
-import { verify } from "argon2"
-
-async function loginAction(formData: FormData) {
-  "use server"
-  const [email, password] = [formData.get("email"), formData.get("password")]
-
-  if (!email || !password) {
-    throw new Error("You must provide email and password!")
-  }
-
-  const query = await pool.execute(
-    "SELECT id, name, role, password FROM user WHERE email=?",
-    [email],
-  )
-
-  const parsed = query[0] as [
-    | {
-        id: number
-        name: string
-        role: "USER" | "ADMIN"
-        password: string
-      }
-    | undefined,
-  ]
-
-  const user = parsed[0]
-
-  if (!user) {
-    redirect(
-      `/auth/login?toast=${encodeURIComponent(
-        JSON.stringify({
-          type: "error",
-          message: "Wrong password or the user doesn't exist.",
-        }),
-      )}`,
-      RedirectType.replace,
-    )
-  }
-
-  const isCorrectPassword = await verify(user.password, password.toString())
-
-  if (!isCorrectPassword) {
-    redirect(
-      `/auth/login?toast=${encodeURIComponent(
-        JSON.stringify({
-          type: "error",
-          message: "Wrong password or the user doesn't exist.",
-        }),
-      )}`,
-      RedirectType.replace,
-    )
-  }
-
-  const cookie_store = await cookies()
-
-  cookie_store.set("u_id", String(user.id), { maxAge: 3600 * 24 })
-  cookie_store.set("u_name", user.name, { maxAge: 3600 * 24 })
-  cookie_store.set("u_role", user.role, { maxAge: 3600 * 24 })
-  redirect("/")
-}
+import { loginSchema } from "@/lib/validation/auth"
+import { z } from "zod"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { trpc } from "@/server/trpc/client"
+import { toast } from "sonner"
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+  Form,
+} from "@/components/ui/form"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface LoginPageProps {}
 
 export default function LoginPage({}: LoginPageProps) {
+  const form = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email:
+        process.env.NODE_ENV === "development" ? "john@doe.com" : undefined,
+      password: process.env.NODE_ENV === "development" ? "johndoe" : undefined,
+    },
+  })
+  const router = useRouter()
+  const utils = trpc.useUtils()
+  const login = trpc.auth.login.useMutation({
+    async onSuccess(data, variables, context) {
+      toast.success("Logged in", {
+        description: "Taking you to the store page.",
+      })
+      router.push("/")
+      utils.user.getMe.setData(undefined, data)
+    },
+    onError(error, variables, context) {
+      toast.error("Couldn't login", {
+        description: error.message,
+        duration: 5000,
+      })
+    },
+  })
+
+  function onSubmit(values: z.infer<typeof loginSchema>) {
+    login.mutate(values)
+  }
+
   return (
     <div className="grid h-full md:grid-cols-2">
-      <div className="relative hidden h-full w-full bg-red-600/50 md:block">
+      <div className="relative hidden h-full w-full md:block">
         <div className="absolute left-0 z-10 h-full w-1/2 bg-gradient-to-r from-zinc-950/50 to-zinc-950/60"></div>
         <div className="absolute right-0 z-10 h-full w-1/2 bg-gradient-to-r from-zinc-950/60 to-zinc-950/80"></div>
+        <Skeleton className="h-full w-full" />
         <div className="absolute bottom-0 left-0 right-0 top-0 h-full w-full">
-          {/* <Image */}
           <ReviewImage
-            // src={review1}
+            suppressHydrationWarning={true}
             alt="Review"
             placeholder="blur"
             fill
@@ -98,7 +75,7 @@ export default function LoginPage({}: LoginPageProps) {
             <blockquote className="block font-serif text-5xl font-semibold tracking-tight text-white">
               &quot;De godaste äggen jag har ätit.&quot;
             </blockquote>
-            <span className="hidden text-5xl 2xl:block">-</span>
+            <span className="hidden text-5xl text-white 2xl:block">-</span>
             <div className="hidden space-x-1 2xl:flex">
               {Array(5)
                 .fill(null)
@@ -112,68 +89,74 @@ export default function LoginPage({}: LoginPageProps) {
           </cite>
         </div>
       </div>
-      <div className="grid place-items-center px-12">
-        <form
-          action={loginAction}
-          className="mx-auto flex w-full max-w-lg flex-col items-center space-y-4"
-        >
-          <div className="w-full">
-            <CardHeader>
-              <CardTitle>Login</CardTitle>
-              <CardDescription>
-                Enter your account to start buying eggs today.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div>
-                  <Label>Email</Label>
-                  <Input
+      <div className="grid w-full place-items-center px-12">
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="mx-auto flex w-full max-w-lg flex-col items-center space-y-4"
+          >
+            <div className="w-full">
+              <CardHeader>
+                <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+                  Login
+                </h3>
+                <p className="text-muted-foreground text-sm">
+                  Access your account to start buying eggs today.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
                     name="email"
-                    type="email"
-                    required
-                    defaultValue={
-                      process.env.NODE_ENV === "development"
-                        ? "john@doe.com"
-                        : undefined
-                    }
+                    render={({ field, formState }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input required {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-                <div>
-                  <Label>Password</Label>
-                  <Input
+                  <FormField
+                    control={form.control}
                     name="password"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                    min={6}
-                    defaultValue={
-                      process.env.NODE_ENV === "development"
-                        ? "johndoe"
-                        : undefined
-                    }
+                    render={({ field, formState }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input required type="password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button type="submit" className="w-full">
-                Login
-              </Button>
-            </CardFooter>
-          </div>
-          <p className="w-8/10 max-w-72 text-center text-sm text-muted-foreground">
-            By continuing, you agree to our{" "}
-            <a className="underline" href="#">
-              Terms of Service
-            </a>{" "}
-            and{" "}
-            <a className="underline" href="#">
-              Privacy Policy
-            </a>
-            .
-          </p>
-        </form>
+              </CardContent>
+              <CardFooter>
+                <ButtonLoader
+                  loading={login.isPending}
+                  type="submit"
+                  className="w-full"
+                >
+                  Sign in
+                </ButtonLoader>
+              </CardFooter>
+            </div>
+            <p className="w-8/10 text-muted-foreground max-w-72 text-center text-sm">
+              By continuing, you agree to our{" "}
+              <a className="underline" href="#">
+                Terms of Service
+              </a>{" "}
+              and{" "}
+              <a className="underline" href="#">
+                Privacy Policy
+              </a>
+              .
+            </p>
+          </form>
+        </Form>
       </div>
     </div>
   )

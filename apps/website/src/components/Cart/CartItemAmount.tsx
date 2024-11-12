@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react"
 import { Button } from "../ui/button"
 import { Check, Minus, Plus } from "lucide-react"
-import { updateCartItemSpecificAmountAction } from "@/app/actions"
+// import { updateCartItemSpecificAmountAction } from "@/app/actions"
 import { toast } from "sonner"
 import { Input } from "../ui/input"
 import { Label } from "../ui/label"
@@ -32,7 +32,7 @@ export function CartItemAmount({ defaultAmount, sciId }: CartItemAmountProps) {
       const timeout = setTimeout(async function () {
         try {
           setLoading(true)
-          await updateCartItemSpecificAmountAction(formData)
+          // await updateCartItemSpecificAmountAction(formData)
         } catch (e) {
           if (e instanceof Error) {
             toast.error(e.message)

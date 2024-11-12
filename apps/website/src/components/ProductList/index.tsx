@@ -1,18 +1,18 @@
-import { pool } from "@/lib/database"
+// import { pool } from "@/lib/database"
 import React, { Suspense } from "react"
 import { RefreshButton } from "../RefreshButton"
 import Link from "next/link"
 import { Button } from "../ui/button"
 import { ProductListContent, ProductListContentLoading } from "./content"
-import { getUser } from "@/lib/user"
+// import { getUser } from "@/lib/user"
 import { PlusIcon } from "lucide-react"
 import { ProductListPagination } from "./pagination"
 import { redirect } from "next/navigation"
 
 export async function getProductCount() {
   try {
-    const data = await pool.query(`SELECT COUNT(id) as count FROM product;`)
-    return (data[0] as [{ count: number }])[0]["count"]
+    // const data = await pool.query(`SELECT COUNT(id) as count FROM product;`)
+    // return (data[0] as [{ count: number }])[0]["count"]
   } catch (e) {
     return 0
   }
@@ -23,7 +23,7 @@ interface ProductListProps {
 }
 
 export async function ProductList({ page: userPage = 1 }: ProductListProps) {
-  const user = getUser()
+  // const user = getUser()
   // const productCount = await getProductCount()
   // const totalPages = Math.ceil(productCount / 10)
 

@@ -2,22 +2,23 @@
 import React, { useState } from "react"
 import { Button } from "../ui/button"
 import { toast } from "sonner"
-import { addToCartAction } from "@/app/actions"
+// import { addToCartAction } from "@/app/actions"
 import { Loader } from "lucide-react"
 
 interface AddToCartProps {
-  productId: number
+  productId: string
   productStock: number
 }
 
 export function AddToCart({ productId, productStock }: AddToCartProps) {
   const [loading, setLoading] = useState<boolean>(false)
+
   return (
     <form
       action={async formData => {
         setLoading(true)
         try {
-          await addToCartAction(formData)
+          // await addToCartAction(formData)
           toast.success("Product added to shopping cart.", {})
         } catch (e) {
           toast.error("Could not add item to shopping cart")

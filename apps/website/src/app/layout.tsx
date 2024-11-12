@@ -1,30 +1,42 @@
 import type { Metadata } from "next"
 import "./globals.css"
-import Image from "next/image"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Toaster } from "@/components/ui/sonner"
-import { getUser } from "@/lib/user"
 // import { ThemeProvider } from "@/components/ThemeProvider"
-import { ThemeButton } from "@/components/ThemeButton"
-import { ToastMessageReader } from "@/components/ToastMessageReader"
-import Logo from "@/app/icon.png"
 import localFont from "next/font/local"
+import dayjs from "dayjs"
+import dayjsRelativeTime from "dayjs/plugin/relativeTime"
+import dayjsLocalized from "dayjs/plugin/localizedFormat"
+import dayjsTimezone from "dayjs/plugin/timezone"
+import dayjsUtc from "dayjs/plugin/utc"
+import localeData from "dayjs/plugin/localeData"
+import "dayjs/locale/sv"
+import { ToastMessageReader } from "@/components/ToastMessageReader"
+import { TRPCProvider } from "@/server/trpc/client"
 import { ThemeProvider } from "next-themes"
+import { Toaster } from "sonner"
+import { NProgress } from "@/components/NProgressProvider"
+
+dayjs.extend(dayjsRelativeTime)
+dayjs.extend(dayjsLocalized)
+dayjs.extend(localeData)
+dayjs.extend(dayjsUtc)
+dayjs.extend(dayjsTimezone)
+dayjs.locale("sv")
 
 // const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
   weight: "100 900",
-});
+})
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
   weight: "100 900",
-});
+})
 
-export const revalidate = 0
+// export const revalidate = 0
+export const dynamic = "force-dynamic"
+// export const dynamic = "force-static"
 
 export const metadata: Metadata = {
   title: "Egg Store",
@@ -36,59 +48,33 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // const [uid, name] = [cookies().get("u_id"), cookies().get("u_name")];
-  const user = await getUser()
+  // const cookieStore = await cookies()
+
+  // If logged in then prefetch header content on the server to avoid flickering
+  // if (cookieStore.has("uid")) {
+  //   void (await Promise.all([
+  //     trpc.user.getMe.prefetch(),
+  //     trpc.user.getMyShoppingCartCount.prefetch(),
+  //     trpc.product.getProducts.prefetch(),
+  //   ]))
+  // }
 
   return (
-    // <html lang="en" className={clsx("dark", inter.variable)}>
-    <html lang="en" 
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-  suppressHydrationWarning>
-      <head>
-        {/* <script
-          dangerouslySetInnerHTML={{
-            __html: `document.documentElement.classList.add("anti-flash");setTimeout(()=>document.documentElement.classList.remove("anti-flash"),100)`,
-          }}
-        /> */}
-      </head>
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable}`}
+      suppressHydrationWarning
+    >
       <body className="flex flex-col">
         <ThemeProvider
-          attribute="class"
           defaultTheme="system"
-
+          attribute="class"
           enableSystem
           disableTransitionOnChange
         >
-          <header className="mx-auto flex w-full max-w-4xl items-center justify-between p-4">
-            <Link href="/" className="flex items-center space-x-4">
-              <Image
-                className="w-12"
-                loading="eager"
-                src={Logo}
-                alt="Egg store logo"
-              />
-              <h1 className="text-4xl font-bold tracking-tighter">Egg Store</h1>
-            </Link>
-            <div className="flex items-center space-x-2">
-              {!user ? (
-                <div className="space-x-2">
-                  <Button asChild>
-                    <Link href="/auth/login">Log in</Link>
-                  </Button>
-                  <Button variant="secondary" asChild>
-                    <Link href="/auth/signup">Sign up</Link>
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-4">
-                  {/* <UserButton name={user.name} /> */}
-                  {/* <ShoppingCartIcon /> */}
-                </div>
-              )}
-              <ThemeButton />
-            </div>
-          </header>
-          {children}
+          <TRPCProvider>
+            <NProgress>{children}</NProgress>
+          </TRPCProvider>
           <Toaster />
           <ToastMessageReader />
         </ThemeProvider>

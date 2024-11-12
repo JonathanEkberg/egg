@@ -1,82 +1,57 @@
+"use client"
 import React from "react"
-import { pool } from "@/lib/database"
-import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { redirect } from "next/navigation"
-import { cookies } from "next/headers"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { ButtonLoader } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
+import { CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { ReviewImage } from "@/components/ReviewImage"
 import { Star } from "lucide-react"
-import { hash } from "argon2"
-
-async function signupAction(formData: FormData) {
-  "use server"
-  const [name, email, password] = [
-    formData.get("name"),
-    formData.get("email"),
-    formData.get("password"),
-  ]
-
-  if (!email || !password) {
-    redirect(
-      `/auth/signup?toast=${encodeURIComponent(
-        JSON.stringify({
-          type: "success",
-          message: "Missing email or password",
-        }),
-      )}`,
-    )
-  }
-
-  const existing = await pool.execute(
-    "SELECT id, name FROM user WHERE email=?;",
-    [email],
-  )
-  const user = existing[0] as [{ id: number; name: string } | undefined]
-
-  if (user.at(0) !== undefined) {
-    redirect(
-      `/auth/signup?toast=${encodeURIComponent(
-        JSON.stringify({
-          type: "success",
-          message: "Account already exists",
-        }),
-      )}`,
-    )
-  }
-
-  const hashed = await hash(String(password))
-  console.log("NEW HASHED:", hashed)
-
-  await pool.execute(
-    "INSERT INTO user (name, email, password, role) VALUES (?, ?, ?, 'USER');",
-    [name, email, hashed],
-  )
-  const newUser = await pool.execute(
-    "SELECT id, name, role FROM user WHERE email=?;",
-    [email],
-  )
-  const uuser = newUser[0] as [
-    { id: number; name: string; role: "ADMIN" | "USER" },
-  ]
-  console.log("NEW USER:", uuser)
-  (await cookies()).set("u_id", String(uuser[0]!.id), { maxAge: 3600 * 24 })
-  (await cookies()).set("u_name", uuser[0]!.name, { maxAge: 3600 * 24 })
-  (await cookies()).set("u_role", uuser[0].role, { maxAge: 3600 * 24 })
-  redirect("/")
-}
+import { trpc } from "@/server/trpc/client"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { registerSchema } from "@/lib/validation/auth"
+import { z } from "zod"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { toast } from "sonner"
 
 interface SignupPageProps {}
 
 export default function SignupPage({}: SignupPageProps) {
+  const form = useForm<z.infer<typeof registerSchema>>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: process.env.NODE_ENV === "development" ? "John Doe" : undefined,
+      email:
+        process.env.NODE_ENV === "development" ? "john@doe.com" : undefined,
+      password: process.env.NODE_ENV === "development" ? "johndoe" : undefined,
+    },
+  })
+  const router = useRouter()
+  const utils = trpc.useUtils()
+  const register = trpc.auth.register.useMutation({
+    onSuccess(data, variables, context) {
+      toast.success("Logged in", {
+        description: "Taking you to the store page.",
+      })
+      router.push("/")
+      utils.user.getMe.setData(undefined, data)
+    },
+    onError(error, variables, context) {
+      toast.error("Couldn't login", { description: error.message })
+    },
+  })
+
+  function onSubmit(values: z.infer<typeof registerSchema>) {
+    register.mutate(values)
+  }
+
   return (
     <div className="grid h-full md:grid-cols-2">
       <div className="relative hidden h-full w-full bg-red-600/50 md:block">
@@ -110,80 +85,86 @@ export default function SignupPage({}: SignupPageProps) {
         </div>
       </div>
       <div className="grid w-full place-items-center px-12">
-        <form
-          action={signupAction}
-          className="mx-auto flex w-full max-w-lg flex-col items-center space-y-4"
-        >
-          <div className="w-full">
-            <CardHeader>
-              <CardTitle>Sign up</CardTitle>
-              <CardDescription>
-                Create an account to start buying eggs today.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div>
-                  <Label>Name</Label>
-                  <Input
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="mx-auto flex w-full max-w-lg flex-col items-center space-y-4"
+          >
+            <div className="w-full">
+              <CardHeader>
+                <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+                  Sign up
+                </h3>
+                <p className="text-muted-foreground text-sm">
+                  Create an account to start buying eggs today.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
                     name="name"
-                    type="text"
-                    required
-                    defaultValue={
-                      process.env.NODE_ENV === "development"
-                        ? "John Doe"
-                        : undefined
-                    }
+                    render={({ field, formState }) => (
+                      <FormItem>
+                        <FormLabel>Name</FormLabel>
+                        <FormControl>
+                          <Input required {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-                <div>
-                  <Label>Email</Label>
-                  <Input
+                  <FormField
+                    control={form.control}
                     name="email"
-                    type="email"
-                    required
-                    defaultValue={
-                      process.env.NODE_ENV === "development"
-                        ? "john@doe.com"
-                        : undefined
-                    }
+                    render={({ field, formState }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input required {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-                <div>
-                  <Label>Password</Label>
-                  <Input
+                  <FormField
+                    control={form.control}
                     name="password"
-                    type="password"
-                    autoComplete="new-password"
-                    required
-                    min={6}
-                    defaultValue={
-                      process.env.NODE_ENV === "development"
-                        ? "johndoe"
-                        : undefined
-                    }
+                    render={({ field, formState }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input required type="password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button type="submit" className="w-full">
-                Sign up
-              </Button>
-            </CardFooter>
-          </div>
-          <p className="w-8/10 max-w-72 text-center text-sm text-muted-foreground">
-            By continuing, you agree to our{" "}
-            <a className="underline" href="#">
-              Terms of Service
-            </a>{" "}
-            and{" "}
-            <a className="underline" href="#">
-              Privacy Policy
-            </a>
-            .
-          </p>
-        </form>
+              </CardContent>
+              <CardFooter>
+                <ButtonLoader
+                  loading={register.isPending}
+                  type="submit"
+                  className="w-full"
+                >
+                  Sign up
+                </ButtonLoader>
+              </CardFooter>
+            </div>
+            <p className="w-8/10 text-muted-foreground max-w-72 text-center text-sm">
+              By continuing, you agree to our{" "}
+              <a className="underline" href="#">
+                Terms of Service
+              </a>{" "}
+              and{" "}
+              <a className="underline" href="#">
+                Privacy Policy
+              </a>
+              .
+            </p>
+          </form>
+        </Form>
       </div>
     </div>
   )

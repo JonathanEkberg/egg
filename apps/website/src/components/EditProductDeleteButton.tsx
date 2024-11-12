@@ -1,7 +1,7 @@
 "use client"
 import React from "react"
 import { Button } from "./ui/button"
-import { deleteProduct } from "@/app/actions"
+// import { deleteProduct } from "@/app/actions"
 
 interface EditProductDeleteButtonProps {
   id: number
@@ -12,7 +12,7 @@ export function EditProductDeleteButton({ id }: EditProductDeleteButtonProps) {
     <Button
       type="button"
       variant="destructive"
-      onClick={() => deleteProduct(id)}
+      // onClick={() => deleteProduct(id)}
     >
       Delete
     </Button>
