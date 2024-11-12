@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/wagslane/go-rabbitmq"
 	"github.com/go-gomail/gomail"
+	"crypto/tls"
 )
 
 
@@ -106,7 +107,7 @@ func consumer() {
 				log.Printf("Failed to parse json\n")
 			}
 
-			if jemail.version == 1 {
+			if jemail.Version == 1 {
 
 			} else {
 				log.Printf("Version in not supported")
@@ -127,34 +128,35 @@ func consumer() {
 
 
 func sendEmail(to, subject, body string) error {
-	from := "EMAIL"
-	password := "PASSWORD"
+	m := gomail.NewMessage()
+	m.SetHeader("From", "alex@example.com")
+	m.SetHeader("To", "bob@example.com", "cora@example.com")
+	m.SetAddressHeader("Cc", "dan@example.com", "Dan")
+	m.SetHeader("Subject", "Hello!")
+	m.SetBody("text/html", "Hello <b>Bob</b> and <i>Cora</i>!")
 
-	// SMTP server configuration.
-	smtpHost := "smtp.gmail.com"
-	smtpPort := "587"
+	d := gomail.NewDialer("localhost", 1025, "user", "123456")
+	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 
-	// Message.
-	msg := "From: " + from + "\n" +
-		"To: " + to + "\n" +
-		"Subject: " + subject + "\n\n" +
-		body
-
-	// Authentication.
-	auth := smtp.PlainAuth("", from, password, smtpHost)
-
-	// Sending email.
-	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{to}, []byte(msg))
+	// Send the email to Bob, Cora and Dan.
+	err := d.DialAndSend(m)
 	if err != nil {
 		return err
 	}
+	
 	return nil
 }
 
 
 
 func main() {
+
+	err := sendEmail("hitler@hitler.com", "hitler", "hitler")
+	if err != nil {
+		log.Fatalf("err = %v\n", err)
+	}
+
 	// publisher()
 	
-	consumer()
+	// consumer()
 }
