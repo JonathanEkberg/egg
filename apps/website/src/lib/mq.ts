@@ -12,8 +12,8 @@ async function getChannel() {
     channel = await conn.createChannel()
   }
 
-  await channel.assertExchange(EMAIL_EXCHANGE, "direct"),
-    await channel.assertQueue(EMAIL_QUEUE, { durable: false })
+  await channel.assertExchange(EMAIL_EXCHANGE, "direct")
+  await channel.assertQueue(EMAIL_QUEUE, { durable: false })
   await channel.bindQueue(EMAIL_QUEUE, EMAIL_EXCHANGE, EMAIL_ROUTING_KEY)
   return channel
 }
