@@ -20,6 +20,12 @@ services:
     ports:
       - 5672:5672
       - 15672:15672
+  smtp:
+    container_name: smtp
+    image: reachfive/fake-smtp-server
+    ports:
+      - 1025:1025
+      - 1080:1080
 
 volumes:
   database:
