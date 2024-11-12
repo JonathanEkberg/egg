@@ -6,6 +6,7 @@ import (
 	"github.com/wagslane/go-rabbitmq"
 	"github.com/go-gomail/gomail"
 	"crypto/tls"
+	"fmt"
 )
 
 
@@ -16,15 +17,7 @@ const (
 )
 
 
-func publisher() {
-	conn, err := rabbitmq.NewConn(
-		"amqp://guest:guest@localhost",
-		rabbitmq.WithConnectionOptionsLogging,
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
+func publisher(conn *rabbitmq.Conn) {
 	
 	publisher, err := rabbitmq.NewPublisher(
 		conn,
@@ -71,21 +64,10 @@ type JsonEmail struct {
 }
 
 
-func initQueue() {
-
-}
 
 
-func consumer() {
-	conn, err := rabbitmq.NewConn(
-		"amqp://guest:guest@localhost",
-		rabbitmq.WithConnectionOptionsLogging,
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
-	
+
+func consumer(conn *rabbitmq.Conn, d *gomail.Dialer) {
 	consumer, err := rabbitmq.NewConsumer(
 		conn,
 		EmailQueue,
@@ -108,11 +90,9 @@ func consumer() {
 			}
 
 			if jemail.Version == 1 {
-
 			} else {
-				log.Printf("Version in not supported")
+				log.Printf("Version %d not supported", jemail.Version)
 			}
-
 
 			log.Printf("consumed: %v", string(d.Body))
 			// rabbitmq.Ack, rabbitmq.NackDiscard, rabbitmq.NackRequeue
@@ -126,37 +106,58 @@ func consumer() {
 }
 
 
-
-func sendEmail(to, subject, body string) error {
+func sendVerifyEmail(d *gomail.Dialer, to_address string, to_name string, link string) error {
 	m := gomail.NewMessage()
-	m.SetHeader("From", "alex@example.com")
-	m.SetHeader("To", "bob@example.com", "cora@example.com")
-	m.SetAddressHeader("Cc", "dan@example.com", "Dan")
-	m.SetHeader("Subject", "Hello!")
-	m.SetBody("text/html", "Hello <b>Bob</b> and <i>Cora</i>!")
 
-	d := gomail.NewDialer("localhost", 1025, "user", "123456")
-	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	m.SetHeader("From", "noreply@gey.com")
+	m.SetHeader("To", to_address)
+	m.SetHeader("Subject", "Verify your account")
 
-	// Send the email to Bob, Cora and Dan.
-	err := d.DialAndSend(m)
-	if err != nil {
-		return err
-	}
-	
-	return nil
+	bodyTemplate := 
+`<h1>Hey, %s</h1>
+Heres the link to verify <a href="%s">verify</a>`
+
+	body := fmt.Sprintf(bodyTemplate, to_name, link)
+
+	m.SetBody("text/html", body)
+
+	err := d.DialAndSend(m)	
+	return err
 }
-
-
 
 func main() {
 
-	err := sendEmail("hitler@hitler.com", "hitler", "hitler")
-	if err != nil {
-		log.Fatalf("err = %v\n", err)
-	}
+	const (
+		rabbitmqHost = "amqp://guest:guest@localhost"
+		smtpHost = "localhost"
+		smtpPort = 1025
+		smtpUser = "user"
+		smtpPass = "123456"
+	)
+
 
 	// publisher()
-	
-	// consumer()
+
+	conn, err := rabbitmq.NewConn(
+		rabbitmqHost,
+		rabbitmq.WithConnectionOptionsLogging,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+
+	d := gomail.NewDialer(smtpHost, smtpPort, smtpUser, smtpPass)
+	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+
+
+	consumer(conn, d)
+
+	// err := sendVerifyEmail(d, "test@gmail.com", "test", "https://www.getavirus.com")
+	// if err != nil {
+	// 	log.Fatalf("err = %v\n", err)
+	// }
+
+
 }
