@@ -12,16 +12,9 @@ async function getChannel() {
     channel = await conn.createChannel()
   }
 
-  await Promise.all([
-    channel.assertExchange(EMAIL_EXCHANGE, "direct"),
-    new Promise<void>(async res => {
-      if (channel) {
-        await channel.assertQueue(EMAIL_QUEUE)
-        await channel.bindQueue(EMAIL_QUEUE, EMAIL_EXCHANGE, EMAIL_ROUTING_KEY)
-      }
-      res()
-    }),
-  ])
+  await channel.assertExchange(EMAIL_EXCHANGE, "direct"),
+    await channel.assertQueue(EMAIL_QUEUE)
+  await channel.bindQueue(EMAIL_QUEUE, EMAIL_EXCHANGE, EMAIL_ROUTING_KEY)
   return channel
 }
 
