@@ -7,7 +7,9 @@
     "./drizzle": "./src/drizzle.ts"
   },
   "scripts": {
-    "studio": "drizzle-kit studio"
+    "studio": "drizzle-kit studio",
+    "push": "dotenv -e .env -- drizzle-kit push",
+    "seed": "dotenv -e .env -- tsx src/seed.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.36.1",
@@ -17,7 +19,9 @@
     "@egg/tsconfig": "workspace:*",
     "@types/node": "^20.11.10",
     "@types/pg": "^8.11.10",
+    "dotenv-cli": "^7.4.2",
     "drizzle-kit": "^0.28.0",
+    "tsx": "^4.19.2",
     "typescript": "^5"
   }
 }

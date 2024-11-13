@@ -13,6 +13,7 @@ export function NProgress({ children }: { children: React.ReactNode }) {
     }
     const newColor =
       resolvedTheme === "dark" ? "rgb(250, 250, 250)" : "rgb(24, 24, 27)"
+    console.log(`NEW COLOR: ${newColor}`)
     setColor(newColor)
   }, [resolvedTheme])
 

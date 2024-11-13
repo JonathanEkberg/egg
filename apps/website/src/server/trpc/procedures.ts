@@ -1,5 +1,14 @@
 import { TRPCError } from "@trpc/server"
-import { baseProcedure } from "./init"
+import { baseProcedure, Context } from "./init"
+
+export function ensureNoSsr(ctx: Context) {
+  if (ctx.isSsr) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "SSR not supported for this route.",
+    })
+  }
+}
 
 export const unAuthedProcedure = baseProcedure.use(async function ({
   next,

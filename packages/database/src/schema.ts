@@ -8,11 +8,14 @@ import {
   pgTable,
   decimal,
   index,
+  boolean,
+  time,
+  primaryKey,
 } from "drizzle-orm/pg-core"
 import { relations } from "drizzle-orm"
 
 // Enums
-const userRole = ["user", "admin", "super_admin"] as const
+export const userRole = ["user", "admin", "super_admin"] as const
 export type UserRole = (typeof userRole)[number]
 export const userRoleEnum = pgEnum("role", userRole)
 
@@ -31,7 +34,26 @@ export const userTable = pgTable("user", {
   role: userRoleEnum("role").default("user").notNull(),
   name: varchar("name").notNull(),
   email: varchar("email").notNull().unique(),
+  emailVerified: boolean("emailVerified").notNull().default(false),
   password: varchar("password").notNull(),
+})
+
+export const refreshTokenTable = pgTable("refresh_token", {
+  id: base.id,
+  createdAt: base.createdAt,
+  expires: timestamp("expires", { withTimezone: true }).notNull(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => userTable.id, { onDelete: "restrict" }),
+})
+
+export const userEmailVerification = pgTable("order", {
+  ...base,
+  code: integer("code").notNull(),
+  expires: timestamp("expires", { withTimezone: true }).notNull(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => userTable.id, { onDelete: "restrict" }),
 })
 
 export const orderTable = pgTable("order", {
@@ -90,23 +112,43 @@ export const reviewTable = pgTable("review", {
     }),
 })
 
-export const shoppingCartItemTable = pgTable("shopping_cart_item", {
-  ...base,
-  amount: integer("amount").notNull(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => userTable.id, { onDelete: "cascade" }),
-  productId: uuid("product_id")
-    .notNull()
-    .references(() => productTable.id, { onDelete: "cascade" }),
-})
+export const shoppingCartItemTable = pgTable(
+  "shopping_cart_item",
+  {
+    createdAt: base.createdAt,
+    updatedAt: base.updatedAt,
+    amount: integer("amount").notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => userTable.id, { onDelete: "cascade" }),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => productTable.id, { onDelete: "cascade" }),
+  },
+  table => {
+    return {
+      pk: primaryKey({ columns: [table.userId, table.productId] }),
+    }
+  },
+)
 
 // Relations
 export const userRelations = relations(userTable, ({ many }) => ({
   orders: many(orderTable),
+  refreshTokens: many(refreshTokenTable),
   reviews: many(reviewTable),
   shoppingCartItems: many(shoppingCartItemTable),
 }))
+
+export const refreshTokenRelations = relations(
+  refreshTokenTable,
+  ({ one, many }) => ({
+    user: one(userTable, {
+      fields: [refreshTokenTable.userId],
+      references: [userTable.id],
+    }),
+  }),
+)
 
 export const orderRelations = relations(orderTable, ({ one, many }) => ({
   user: one(userTable, {

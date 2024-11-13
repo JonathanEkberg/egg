@@ -1,13 +1,18 @@
 "use client"
 import React from "react"
 // import { pool } from "@/lib/database"
-import { BoxIcon, StarIcon } from "lucide-react"
+import { BoxIcon, StarIcon, Trash } from "lucide-react"
 import dayjs from "dayjs"
 import { trpc } from "@/server/trpc/client"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
 // import { AddToCart } from "@/components/ProductPage/AddToCart"
 import { MakeReviewButton } from "@/components/ProductPage/MakeReviewButton"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
+import { AddToCart } from "@/components/ProductPage/AddToCart"
 // const getProduct = async (id: number) => {
 //   const data = await pool.execute(
 //     `SELECT id, name, description, image, price_usd, stock FROM product WHERE id = ?;`,
@@ -46,49 +51,75 @@ import { MakeReviewButton } from "@/components/ProductPage/MakeReviewButton"
 // }
 
 function Review({
+  id,
+  productId,
   stars,
   createdAt,
   text,
   user,
 }: {
+  id: string
+  productId: string
   stars: number
   createdAt: string
   text: string
   user: { id: string; name: string }
 }) {
+  // const router = useRouter()
+  const me = trpc.user.getMe.useQuery()
+  const utils = trpc.useUtils()
+  const deleteReview = trpc.product.deleteReview.useMutation({
+    onError(error, variables, context) {
+      toast.error(error.message)
+    },
+    onSuccess() {
+      utils.product.getProduct.invalidate({ id: productId })
+    },
+  })
+  const isCreator = user.id === me.data?.id
+
   return (
-    <div>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <span className="text-lg font-bold">{user.name}</span>
-          <span className="text-lg font-bold">•</span>
-          <div className="text-muted-foreground text-sm">
-            {`${dayjs(dayjs(createdAt).utc(true)).fromNow()} - ${dayjs(
-              dayjs(createdAt).utc(true),
-            )
-              .tz("Europe/Stockholm", false)
-              .format("LLL")}`}
+    <div className="flex">
+      <div className="flex-1">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <span className="text-lg font-bold">{user.name}</span>
+            <span className="text-lg font-bold">•</span>
+            <div className="text-muted-foreground text-sm">
+              {`${dayjs(createdAt).fromNow()} - ${dayjs(
+                dayjs(createdAt),
+              ).format("LLL")}`}
+            </div>
           </div>
         </div>
+        <div className="mb-2 flex">
+          {Array(stars)
+            .fill(null)
+            .map((_, idx) => (
+              <StarIcon size={20} stroke="#f7bf23" fill="#ebaf2f" key={idx} />
+            ))}
+          {Array(5 - stars)
+            .fill(null)
+            .map((_, idx) => (
+              <StarIcon
+                size={20}
+                className="stroke-zinc-300 dark:stroke-[#fff9]"
+                stroke="#fff9"
+                key={idx}
+              />
+            ))}
+        </div>
+        <p className="break-words">{text}</p>
       </div>
-      <div className="mb-2 flex">
-        {Array(stars)
-          .fill(null)
-          .map((_, idx) => (
-            <StarIcon size={20} stroke="#f7bf23" fill="#ebaf2f" key={idx} />
-          ))}
-        {Array(5 - stars)
-          .fill(null)
-          .map((_, idx) => (
-            <StarIcon
-              size={20}
-              className="stroke-zinc-300 dark:stroke-[#fff9]"
-              stroke="#fff9"
-              key={idx}
-            />
-          ))}
-      </div>
-      <p className="break-words">{text}</p>
+      {me.isLoading ? (
+        <Skeleton className="h-8 w-8" />
+      ) : (
+        isCreator && (
+          <Button onClick={() => deleteReview.mutate({ id })} size="icon">
+            <Trash />
+          </Button>
+        )
+      )}
     </div>
   )
 }
@@ -172,7 +203,7 @@ export function ProductPageComponent({ productId }: ProductPageProps) {
               </div>
             </div>
           </div>
-          {/* <AddToCart productId={product.id} productStock={product.stock ?? 0} /> */}
+          <AddToCart productId={product.id} productStock={product.stock ?? 0} />
           {/* <form action={addToCartAction}>
             <input hidden readOnly value={product.id} name="productId" />
             <Button type="submit" disabled={!product.stock}>
@@ -197,10 +228,12 @@ export function ProductPageComponent({ productId }: ProductPageProps) {
             <MakeReviewButton productId={productId} />
           </div>
         </div>
-        {/* <ul className="space-y-4">
+        <ul className="space-y-4">
           {product.reviews.map(review => (
             <li key={review.id}>
               <Review
+                id={review.id}
+                productId={productId}
                 stars={review.stars}
                 createdAt={review.createdAt}
                 text={review.text}
@@ -208,7 +241,7 @@ export function ProductPageComponent({ productId }: ProductPageProps) {
               />
             </li>
           ))}
-        </ul> */}
+        </ul>
       </div>
     </div>
   )

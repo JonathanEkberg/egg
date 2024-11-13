@@ -1,9 +1,9 @@
 "use client"
-import React, { useState } from "react"
+import React from "react"
 import { Button } from "../ui/button"
-import { toast } from "sonner"
-// import { addToCartAction } from "@/app/actions"
 import { Loader } from "lucide-react"
+import { trpc } from "@/server/trpc/client"
+import { toast } from "sonner"
 
 interface AddToCartProps {
   productId: string
@@ -11,27 +11,25 @@ interface AddToCartProps {
 }
 
 export function AddToCart({ productId, productStock }: AddToCartProps) {
-  const [loading, setLoading] = useState<boolean>(false)
+  const utils = trpc.useUtils()
+  const add = trpc.product.addProductToCart.useMutation({
+    onError(error, variables, context) {
+      toast.error(error.message)
+    },
+    onSuccess(data, variables, context) {
+      utils.user.getMyShoppingCartCount.invalidate()
+      utils.product.getProduct.invalidate({ id: productId })
+    },
+  })
 
   return (
-    <form
-      action={async formData => {
-        setLoading(true)
-        try {
-          // await addToCartAction(formData)
-          toast.success("Product added to shopping cart.", {})
-        } catch (e) {
-          toast.error("Could not add item to shopping cart")
-        } finally {
-          setLoading(false)
-        }
-      }}
+    <Button
+      type="button"
+      onClick={() => add.mutate({ id: productId })}
+      disabled={add.isPending || !productStock}
     >
-      <input hidden readOnly value={productId} name="productId" />
-      <Button type="submit" disabled={loading || !productStock}>
-        {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
-        Add to cart
-      </Button>
-    </form>
+      {/* {add.isPending && <Loader className="mr-2 h-4 w-4 animate-spin" />} */}
+      Add to cart
+    </Button>
   )
 }

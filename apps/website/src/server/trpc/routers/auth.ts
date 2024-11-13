@@ -6,8 +6,36 @@ import { loginSchema, registerSchema } from "@/lib/validation/auth"
 import { unAuthedProcedure } from "../procedures"
 import { z } from "zod"
 import { sendEmail } from "@/lib/mq"
+import { createSession, logout } from "@/server/authentication"
+import { sql } from "@egg/database/drizzle"
+
+const preparedRegisterUser = db
+  .insert(userTable)
+  .values({
+    name: sql.placeholder("name"),
+    email: sql.placeholder("email"),
+    password: sql.placeholder("password"),
+    role: sql.placeholder("role"),
+  })
+  .returning({
+    id: userTable.id,
+    name: userTable.name,
+    email: userTable.email,
+    role: userTable.role,
+    emailVerified: userTable.emailVerified,
+  })
+  .prepare("prepared_register_user")
 
 export const authRouter = createTRPCRouter({
+  // jwt: unAuthedProcedure.query(() => {
+  //   const result = createAccessToken({
+  //     email: "mark@suckerberg.com",
+  //     emailVerified: true,
+  //     role: "super_admin",
+  //     userId: "123",
+  //   })
+  //   console.log(JSON.stringify(result))
+  // }),
   sendTwoFactorEmail: unAuthedProcedure
     .input(
       z.object({
@@ -30,7 +58,6 @@ export const authRouter = createTRPCRouter({
     input,
     signal,
   }) {
-    // db.select().from(userTable).where(eq(userTable.email, input.email))
     const existing = await db.query.userTable.findFirst({
       where: (u, { eq }) => eq(u.email, input.email),
       columns: { id: true },
@@ -43,39 +70,35 @@ export const authRouter = createTRPCRouter({
       })
     }
 
-    console.log("Hashing password...")
-    const start = performance.now()
+    // console.log("Hashing password...")
+    // const start = performance.now()
     const hashedPassword = await hashPassword(input.password, signal)
-    const time = performance.now() - start
-    console.log(`Hashed password in ${time}ms`)
+    // const time = performance.now() - start
+    // console.log(`Hashed password in ${time}ms`)
 
-    const [user] = await db
-      .insert(userTable)
-      .values({
-        name: input.name,
-        email: input.email,
-        password: hashedPassword,
-        role: "user",
-      })
-      .returning({
-        id: userTable.id,
-        name: userTable.name,
-        email: userTable.email,
-        role: userTable.role,
-      })
+    const [user] = await preparedRegisterUser.execute({
+      name: input.name,
+      email: input.email,
+      password: hashedPassword,
+      role: "user",
+    })
 
-    // TODO: Implement real sessions
-    ctx.cookies.set("uid", user.id, { httpOnly: true, maxAge: 86400 })
+    await createSession(ctx.cookies, {
+      userId: user.id,
+      name: user.name,
+      email: user.email,
+      emailVerified: user.emailVerified,
+      role: user.role,
+    })
 
-    const { id, name, email, role } = user
-    return { id, name, email, role }
+    const { id, name, email, role, emailVerified } = user
+    return { id, name, email, role, emailVerified }
   }),
   login: unAuthedProcedure.input(loginSchema).mutation(async function ({
     ctx,
     input,
     signal,
   }) {
-    // db.select().from(userTable).where(eq(userTable.email, input.email))
     const existing = await db.query.userTable.findFirst({
       where: (u, { eq }) => eq(u.email, input.email),
       columns: {
@@ -84,6 +107,7 @@ export const authRouter = createTRPCRouter({
         role: true,
         email: true,
         password: true,
+        emailVerified: true,
       },
     })
 
@@ -111,13 +135,32 @@ export const authRouter = createTRPCRouter({
       })
     }
 
-    // TODO: Implement real sessions
-    ctx.cookies.set("uid", existing.id, { httpOnly: true, maxAge: 86400 })
+    const { id: userId, name, email, emailVerified, role } = existing
+    const sessionSuccess = await createSession(ctx.cookies, {
+      name,
+      userId,
+      email,
+      emailVerified,
+      role,
+    })
 
-    const { id, name, email, role } = existing
-    return { id, name, email, role }
+    if (!sessionSuccess) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Could not sign you in. Try again.",
+      })
+    }
+
+    return { id: userId, name: existing.name, email, role, emailVerified }
   }),
   logout: baseProcedure.mutation(async function ({ ctx, input, signal }) {
-    ctx.cookies.delete("uid")
+    try {
+      await logout(ctx.cookies, ctx.isSsr)
+      return true
+    } catch (e) {
+      console.error(e)
+      return false
+    }
+    // ctx.cookies.delete("uid")
   }),
 })

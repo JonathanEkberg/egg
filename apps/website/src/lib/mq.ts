@@ -4,11 +4,11 @@ const EMAIL_QUEUE = "email_queue"
 const EMAIL_EXCHANGE = "email"
 const EMAIL_ROUTING_KEY = ""
 
-const conn = await amqp.connect("amqp://localhost:5672")
 let channel: amqp.Channel | undefined
 
 async function getChannel() {
   if (!channel) {
+    const conn = await amqp.connect("amqp://localhost:5672")
     channel = await conn.createChannel()
   }
 
@@ -19,7 +19,9 @@ async function getChannel() {
 }
 
 export async function sendEmail(to: string, body: string) {
-  return (await getChannel()).publish(
+  const channel = await getChannel()
+
+  return channel.publish(
     EMAIL_EXCHANGE,
     EMAIL_ROUTING_KEY,
     Buffer.from(

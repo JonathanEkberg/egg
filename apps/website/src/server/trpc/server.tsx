@@ -1,7 +1,11 @@
 import "server-only" // <-- ensure this file cannot be imported from the client
 import { createHydrationHelpers } from "@trpc/react-query/rsc"
 import { cache } from "react"
-import { createCallerFactory, createTRPCContext } from "./init"
+import {
+  createCallerFactory,
+  createTRPCContextClient,
+  createTRPCContextServer,
+} from "./init"
 import { makeQueryClient } from "./query-client"
 import { appRouter } from "./routers/_app"
 
@@ -9,7 +13,7 @@ import { appRouter } from "./routers/_app"
 //            will return the same client during the same request.
 export const getQueryClient = cache(makeQueryClient)
 
-const caller = createCallerFactory(appRouter)(createTRPCContext)
+const caller = createCallerFactory(appRouter)(createTRPCContextServer)
 
 export const { trpc, HydrateClient } = createHydrationHelpers<typeof appRouter>(
   caller,

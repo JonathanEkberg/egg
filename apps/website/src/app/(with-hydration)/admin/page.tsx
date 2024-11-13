@@ -33,29 +33,30 @@ const buttons: {
 interface AdminPageProps {}
 
 export default async function AdminPage({}: AdminPageProps) {
-  const user = await getUser()
+  return null
+  // const user = await getUser()
 
-  if (!user || user.role === "user") {
-    return redirect("/")
-  }
+  // if (!user || user.role === "user") {
+  //   return redirect("/")
+  // }
 
-  return (
-    <div className="mx-auto w-full max-w-2xl">
-      <div className="grid grid-cols-2">
-        {buttons.map(card => (
-          <Card key={card.title}>
-            <CardHeader>
-              <CardTitle>{card.title}</CardTitle>
-              <CardDescription>{card.description}</CardDescription>
-            </CardHeader>
-            <CardFooter>
-              <Button asChild>
-                <Link href={card.button.link}>{card.button.name}</Link>
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-    </div>
-  )
+  // return (
+  //   <div className="mx-auto w-full max-w-2xl">
+  //     <div className="grid grid-cols-2">
+  //       {buttons.map(card => (
+  //         <Card key={card.title}>
+  //           <CardHeader>
+  //             <CardTitle>{card.title}</CardTitle>
+  //             <CardDescription>{card.description}</CardDescription>
+  //           </CardHeader>
+  //           <CardFooter>
+  //             <Button asChild>
+  //               <Link href={card.button.link}>{card.button.name}</Link>
+  //             </Button>
+  //           </CardFooter>
+  //         </Card>
+  //       ))}
+  //     </div>
+  //   </div>
+  // )
 }

@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from "react"
+import React, { useRef, useState } from "react"
 import { Button } from "../ui/button"
 import { PlusIcon, StarIcon } from "lucide-react"
 import {
@@ -14,45 +14,66 @@ import { Textarea } from "../ui/textarea"
 // import { makeReviewAction } from "@/app/actions"
 import { toast } from "sonner"
 import { Label } from "../ui/label"
+import { trpc } from "@/server/trpc/client"
+import { useRouter } from "next/navigation"
+import { produce } from "immer"
 
 interface MakeReviewButtonProps {
   productId: string
 }
 
 export function MakeReviewButton({ productId }: MakeReviewButtonProps) {
-  const [loading, setLoading] = useState<boolean>(false)
+  const router = useRouter()
+  const me = trpc.user.getMe.useQuery()
+  const reviewTextRef = useRef<HTMLTextAreaElement>(null)
   const [open, setOpen] = useState<boolean>(false)
-  const [stars, setStars] = useState<number>(5)
+  const [stars, setStars] = useState<number>(4)
+
+  const utils = trpc.useUtils()
+  const makeReview = trpc.product.makeReview.useMutation({
+    onError(error, variables, context) {
+      toast.error(error.message)
+    },
+    onSuccess(error, variables, context) {
+      utils.product.getProduct.invalidate({ id: productId })
+    },
+  })
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    setLoading(true)
+    const review = reviewTextRef.current?.value
+
+    if (!review) {
+      return
+    }
     try {
       e.preventDefault()
 
-      if (!("review" in e.target)) {
-        return
-      }
-
-      const reviewInput = e.target["review"] as HTMLTextAreaElement
-      const form = new FormData()
-      form.set("stars", String(stars))
-      form.set("review", reviewInput.value)
-      form.set("productId", String(productId))
-      // await makeReviewAction(form)
+      makeReview.mutate({
+        productId,
+        review,
+        stars,
+      })
       setOpen(false)
     } catch (e) {
       if (e instanceof Error) {
         toast.error(e.message)
       }
-    } finally {
-      setLoading(false)
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="secondary" disabled={loading}>
+      <DialogTrigger
+        asChild
+        onClick={e => {
+          if (!me.data) {
+            e.preventDefault()
+            router.push("/auth/login")
+            setOpen(false)
+          }
+        }}
+      >
+        <Button variant="secondary" disabled={makeReview.isPending}>
           <PlusIcon className="mr-2 h-4 w-4" />
           Make review
         </Button>
@@ -69,7 +90,11 @@ export function MakeReviewButton({ productId }: MakeReviewButtonProps) {
                 .fill(null)
                 .map((_, idx) => (
                   <StarIcon
-                    onClick={() => setStars(idx + 1)}
+                    onClick={() => {
+                      if (!makeReview.isPending) {
+                        setStars(idx + 1)
+                      }
+                    }}
                     size={24}
                     className="cursor-pointer hover:opacity-75"
                     stroke="#f7bf23"
@@ -81,7 +106,11 @@ export function MakeReviewButton({ productId }: MakeReviewButtonProps) {
                 .fill(null)
                 .map((_, idx) => (
                   <StarIcon
-                    onClick={() => setStars(stars + idx + 1)}
+                    onClick={() => {
+                      if (!makeReview.isPending) {
+                        setStars(stars + idx + 1)
+                      }
+                    }}
                     size={24}
                     className="cursor-pointer stroke-zinc-300 hover:opacity-75 dark:stroke-[#fff9]"
                     // stroke="#fff9"
@@ -92,7 +121,13 @@ export function MakeReviewButton({ productId }: MakeReviewButtonProps) {
           </div>
           <div>
             <Label>Review</Label>
-            <Textarea className="max-h-64" minLength={3} name="review" />
+            <Textarea
+              disabled={makeReview.isPending}
+              ref={reviewTextRef}
+              className="max-h-64"
+              minLength={3}
+              name="review"
+            />
           </div>
           <Button type="submit">Submit</Button>
         </form>

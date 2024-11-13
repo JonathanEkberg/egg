@@ -8,10 +8,12 @@ import { Button } from "./ui/button"
 import { ThemeButton } from "./ThemeButton"
 import { UserButton } from "./UserButton"
 import { ShoppingCartIcon } from "./ShoppingCartIcon"
+import { Skeleton } from "./ui/skeleton"
 
 interface HeaderProps {}
 
 export function Header({}: HeaderProps) {
+  trpc.user.getMyShoppingCartCount.usePrefetchQuery()
   const me = trpc.user.getMe.useQuery()
 
   return (
@@ -25,24 +27,29 @@ export function Header({}: HeaderProps) {
         />
         <h1 className="text-4xl font-bold tracking-tighter">Egg Store</h1>
       </Link>
-      <div className="flex items-center space-x-2">
-        {!me.data ? (
-          <div className="space-x-2">
-            <Button asChild>
-              <Link href="/auth/login">Log in</Link>
-            </Button>
-            <Button variant="secondary" asChild>
-              <Link href="/auth/signup">Sign up</Link>
-            </Button>
-          </div>
-        ) : (
-          <div className="flex items-center space-x-4">
-            <UserButton name={me.data.name} role={me.data.role} />
-            <ShoppingCartIcon />
-          </div>
-        )}
-        <ThemeButton />
-      </div>
+      {me.isLoading ? (
+        // {true ? (
+        <Skeleton className="h-8 w-32" />
+      ) : (
+        <div className="flex items-center space-x-2">
+          {!me.data ? (
+            <div className="space-x-2">
+              <Button asChild>
+                <Link href="/auth/login">Log in</Link>
+              </Button>
+              <Button variant="secondary" asChild>
+                <Link href="/auth/signup">Sign up</Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center space-x-4">
+              <UserButton name={me.data.name} role={me.data.role} />
+              <ShoppingCartIcon />
+            </div>
+          )}
+          <ThemeButton />
+        </div>
+      )}
     </header>
   )
 }
