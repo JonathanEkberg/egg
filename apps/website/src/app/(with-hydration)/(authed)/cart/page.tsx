@@ -114,6 +114,11 @@ export default function CartPage({}: CartPageProps) {
                 ))}
             </TableBody>
           </Table>
+          {items.data && items.data.length === 0 ? (
+            <div className="text-muted-foreground pb-6 pt-12 text-center">
+              You haven't added any products to your cart.
+            </div>
+          ) : null}
         </CardContent>
 
         <CardFooter className="flex w-full justify-between">
