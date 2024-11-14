@@ -10,7 +10,7 @@ import { TRPCError } from "@trpc/server"
 import { authProcedure } from "../../procedures"
 import { deleteReviewSchema, makeReviewSchema } from "@/lib/validation/product"
 
-export const addProductToCart = authProcedure
+export const addProductToCartRoute = authProcedure
   .input(deleteReviewSchema)
   .mutation(async function ({ ctx, input }) {
     try {

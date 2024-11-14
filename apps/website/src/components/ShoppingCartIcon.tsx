@@ -19,7 +19,7 @@ import { trpc } from "@/server/trpc/client"
 interface ShoppingCartIconProps {}
 
 export function ShoppingCartIcon({}: ShoppingCartIconProps) {
-  const countQuery = trpc.user.getMyShoppingCartCount.useQuery()
+  const countQuery = trpc.cart.getMyCount.useQuery()
 
   if (!countQuery.data) {
     return null

@@ -1,16 +1,14 @@
-import { baseProcedure, createTRPCRouter } from "../../init"
+import { createTRPCRouter } from "../../init"
 import { createProductRoute } from "./createProduct"
 import { getProductsRoute } from "./getProducts"
 import { getProductRoute } from "./getProduct"
 import { getProductsPaginationRoute } from "./getProductsPagination"
-import { makeReviewRoute } from "./makeReview"
-import { deleteReviewRoute } from "./deleteReview"
-import { addProductToCart } from "./addProductToCart"
+import { addProductToCartRoute } from "../cart/addProductToCart"
 
 export const productRouter = createTRPCRouter({
   createProduct: createProductRoute,
   getProducts: getProductsRoute,
   getProductsPagination: getProductsPaginationRoute,
   getProduct: getProductRoute,
-  addProductToCart: addProductToCart,
+  addProductToCart: addProductToCartRoute,
 })

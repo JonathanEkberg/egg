@@ -8,13 +8,16 @@ import { Input } from "../ui/input"
 import { Label } from "../ui/label"
 
 interface CartItemAmountProps {
-  /** The shopping cart item ID */
-  sciId: number
+  /** The product ID */
+  productId: string
   /** The default amount chosen for the cart item */
   defaultAmount: number
 }
 
-export function CartItemAmount({ defaultAmount, sciId }: CartItemAmountProps) {
+export function CartItemAmount({
+  defaultAmount,
+  productId,
+}: CartItemAmountProps) {
   const [loading, setLoading] = useState<boolean>(false)
   const [amount, setAmount] = useState<number>(defaultAmount)
   const [numEditing, setNumEditing] = useState<boolean>(false)
@@ -26,7 +29,7 @@ export function CartItemAmount({ defaultAmount, sciId }: CartItemAmountProps) {
       }
 
       const formData = new FormData()
-      formData.set("sciId", String(sciId))
+      formData.set("sciId", String(productId))
       formData.set("amount", String(amount))
 
       const timeout = setTimeout(async function () {

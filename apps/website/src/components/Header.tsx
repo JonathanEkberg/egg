@@ -13,7 +13,7 @@ import { Skeleton } from "./ui/skeleton"
 interface HeaderProps {}
 
 export function Header({}: HeaderProps) {
-  trpc.user.getMyShoppingCartCount.usePrefetchQuery()
+  trpc.cart.getMyCount.usePrefetchQuery()
   const me = trpc.user.getMe.useQuery()
 
   return (
