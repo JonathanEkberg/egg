@@ -26,6 +26,9 @@ export function CartItemAmount({
   const changeAmount = trpc.cart.changeCartAmount.useMutation({
     onError(error, variables, context) {
       toast.error(error.message)
+      utils.cart.getMyCount.invalidate()
+      utils.cart.getItems.invalidate()
+      utils.cart.getTotal.invalidate()
     },
     onSuccess(data, variables, context) {
       utils.cart.getMyCount.invalidate()
