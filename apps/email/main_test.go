@@ -24,14 +24,14 @@ func TestSendMail(t *testing.T) {
 	
 	err := sendVerifyEmail(d, to_address, textSent)
 	if err != nil {
-		t.Errorf("lul %v", err)
+		t.Errorf("Failed to send because %v\n", err)
 	}
 	resp, err := http.Get("http://localhost:1080/api/emails")
 	if err != nil {
 		t.Fatalf("Failed to get response because %v\n", err)
 	}
 	if resp.StatusCode != 200 {
-		t.Fatalf("expected %v got %v", 200, resp.StatusCode)
+		t.Fatalf("expected %v got %v\n", 200, resp.StatusCode)
 	}
 
 	defer resp.Body.Close()
@@ -70,19 +70,19 @@ func TestSendMail(t *testing.T) {
 
 
 	if from != expected_from {
-		t.Errorf("Expected %s got %s", expected_from, from)
+		t.Errorf("Expected %s got %s\n", expected_from, from)
 	}
 
 	if to != to_address {
-		t.Errorf("Expected %s got %s", to_address, to)
+		t.Errorf("Expected %s got %s\n", to_address, to)
 	}
 
 	if text != textSent {
-		t.Errorf("Expected %s got %s", textSent, text)
+		t.Errorf("Expected %s got %s\n", textSent, text)
 	}
 
 	if subject != expected_subject {
-		t.Errorf("Expected %s got %s", expected_subject, subject)
+		t.Errorf("Expected %s got %s\n", expected_subject, subject)
 	}
 
 }
