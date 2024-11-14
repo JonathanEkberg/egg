@@ -21,7 +21,7 @@ const preparedGetShoppingCartTotal = db
   .from(shoppingCartItemTable)
   .innerJoin(productTable, eq(shoppingCartItemTable.productId, productTable.id))
   .where(eq(shoppingCartItemTable.userId, sql.placeholder("userId")))
-  .prepare("prepared_get_shopping_cart_count")
+  .prepare("prepared_get_shopping_cart_total")
 
 export const cartRouter = createTRPCRouter({
   getItems: getItemsRoute,
