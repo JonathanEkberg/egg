@@ -93,16 +93,6 @@ func sendVerifyEmail(d *gomail.Dialer, to_address string, body string) error {
 }
 
 
-func createRabbitmqconn(rabbitmqHost string) *rabbitmq.Conn {
-	conn, err := rabbitmq.NewConn(
-		rabbitmqHost,
-		rabbitmq.WithConnectionOptionsLogging,
-	)
-	if err != nil {
-		return err
-	}
-}
-
 func main() {
 
 	const (
@@ -113,11 +103,10 @@ func main() {
 		smtpPass = "123456"
 	)
 
-
-	// publisher()
-
-
-	conn, err := createRabbitmqconn(rabbitmqHost)
+	conn, err := rabbitmq.NewConn(
+		rabbitmqHost,
+		rabbitmq.WithConnectionOptionsLogging,
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
