@@ -6,6 +6,7 @@ import { Check, Minus, Plus } from "lucide-react"
 import { toast } from "sonner"
 import { Input } from "../ui/input"
 import { Label } from "../ui/label"
+import { trpc } from "@/server/trpc/client"
 
 interface CartItemAmountProps {
   /** The product ID */
@@ -18,37 +19,20 @@ export function CartItemAmount({
   defaultAmount,
   productId,
 }: CartItemAmountProps) {
-  const [loading, setLoading] = useState<boolean>(false)
   const [amount, setAmount] = useState<number>(defaultAmount)
   const [numEditing, setNumEditing] = useState<boolean>(false)
 
-  useEffect(
-    function () {
-      if (loading || amount < 0) {
-        return
-      }
-
-      const formData = new FormData()
-      formData.set("sciId", String(productId))
-      formData.set("amount", String(amount))
-
-      const timeout = setTimeout(async function () {
-        try {
-          setLoading(true)
-          // await updateCartItemSpecificAmountAction(formData)
-        } catch (e) {
-          if (e instanceof Error) {
-            toast.error(e.message)
-          }
-        } finally {
-          setLoading(false)
-        }
-      }, 500)
-
-      return () => clearTimeout(timeout)
+  const utils = trpc.useUtils()
+  const changeAmount = trpc.cart.changeCartAmount.useMutation({
+    onError(error, variables, context) {
+      toast.error(error.message)
     },
-    [amount],
-  )
+    onSuccess(data, variables, context) {
+      utils.cart.getMyCount.invalidate()
+      utils.cart.getItems.invalidate()
+      utils.cart.getTotal.invalidate()
+    },
+  })
 
   return (
     <div className="flex items-center justify-center space-x-1">
@@ -57,7 +41,6 @@ export function CartItemAmount({
           //   <form className="flex items-center space-x-2">
           <form
             className="space-y-2"
-            // action={updateCartItemSpecificAmountAction}
             onSubmit={e => {
               e.preventDefault()
               // e.target["as"]
@@ -65,9 +48,12 @@ export function CartItemAmount({
                 return
               }
               const amountInput = e.target["amount"] as HTMLInputElement
-              const amount = amountInput.valueAsNumber
-              setAmount(amount)
+              const newAmount = amountInput.valueAsNumber
+              setAmount(newAmount)
               setNumEditing(false)
+              const diff = newAmount - amount
+              // console.log(amount, diff)
+              changeAmount.mutate({ amount: diff, productId })
             }}
           >
             <Input
@@ -85,22 +71,28 @@ export function CartItemAmount({
         ) : (
           <>
             <Button
-              disabled={amount > 100_000}
+              disabled={amount > 100_000 || changeAmount.isPending}
               variant="secondary"
               size="icon"
               className="h-6 w-6"
-              onClick={() => setAmount(current => (current += 1))}
+              onClick={() => {
+                changeAmount.mutate({ amount: 1, productId })
+                setAmount(current => current + 1)
+              }}
             >
               <Plus size={12} />
             </Button>
-            <div onClick={() => setNumEditing(true)}>{amount}</div>
+            <button onClick={() => setNumEditing(true)}>{amount}</button>
             <Button
-              disabled={amount < 2}
+              disabled={amount < 2 || changeAmount.isPending}
               type="submit"
               variant="secondary"
               size="icon"
               className="h-6 w-6"
-              onClick={() => setAmount(current => (current -= 1))}
+              onClick={() => {
+                changeAmount.mutate({ amount: -1, productId })
+                setAmount(current => current - 1)
+              }}
             >
               <Minus size={12} />
             </Button>

@@ -1,17 +1,11 @@
-import {
-  db,
-  productTable,
-  reviewTable,
-  shoppingCartItemTable,
-} from "@egg/database"
-import { and, desc, eq, sql } from "@egg/database/drizzle"
-import { baseProcedure } from "../../init"
+import { db, productTable, shoppingCartItemTable } from "@egg/database"
+import { and, eq, sql } from "@egg/database/drizzle"
 import { TRPCError } from "@trpc/server"
 import { authProcedure } from "../../procedures"
-import { deleteReviewSchema } from "@/lib/validation/review"
+import { addProductToCartSchema } from "@/lib/validation/cart"
 
 export const addProductToCartRoute = authProcedure
-  .input(deleteReviewSchema)
+  .input(addProductToCartSchema)
   .mutation(async function ({ ctx, input }) {
     try {
       const result = await db.transaction(async tx => {
