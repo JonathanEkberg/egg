@@ -30,7 +30,7 @@ const eggs: string[] = [
 ]
 
 async function seed() {
-  const random = [...eggs].sort(() => Math.random() * 2 - 1)
+  const random = [...eggs].sort(() => Math.random() - 1)
   const values: {
     title: string
     description: string
@@ -51,6 +51,8 @@ async function seed() {
     })
   }
 
+  console.log(`Upserting ${values.length} products...`)
+  const start = performance.now()
   await db.insert(productTable).values(
     values.map(v => ({
       createdAt: v.now,
@@ -66,6 +68,9 @@ async function seed() {
       stock: Math.floor(Math.random() * 50) + 10,
     })),
   )
+  const time = performance.now() - start
+  console.log(`Upserted products in ${time}ms`)
+  process.exit(0)
 }
 
 seed()
