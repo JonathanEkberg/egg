@@ -2,80 +2,87 @@ package main
 
 import (
 	"testing"
-	"github.com/wagslane/go-rabbitmq"
+	"github.com/go-gomail/gomail"
+	"crypto/tls"
+	"net/http"
+	"encoding/json"
+	"io"
 )
 
 
-func TestEmail(t *testing.t) {
-	
-	conn, err := createRabbitmqconn(rabbitmqHost)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer conn.Close()
-
-	d := gomail.NewDialer(smtpHost, smtpPort, smtpUser, smtpPass)
-	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-	
-	
-	go consumer(conn, d)
-
-
-	publisher, err := rabbitmq.NewPublisher(
-		conn,
-		rabbitmq.WithPublisherOptionsLogging,
-		rabbitmq.WithPublisherOptionsExchangeName(EmailExchange),
-		rabbitmq.WithPublisherOptionsExchangeDeclare,
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer publisher.Close()
-	
-
-	RawJson :=`
-	{
-		"type": "email",
-		"version": 1,
-		"data": { "to": "test@test.com", "body": "You have been arrested by the Fbi. plz send us amazon gift cards for this to go away :)" }
-	}
-	`
-
-	err = publisher.Publish(
-		[]byte(RawJson),
-		[]string{EmailRoute},
-		rabbitmq.WithPublishOptionsContentType("application/json"),
-		rabbitmq.WithPublishOptionsExchange(EmailExchange),
-	)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-}
 
 func TestSendMail(t *testing.T) {
 
-	const (
-		//rabbitmqHost = "amqp://guest:guest@localhost"
-		smtpHost = "localhost"
-		smtpPort = 1025
-		smtpUser = "user"
-		smtpPass = "123456"
-	)
+	textSent := "nyaste"
+	to_address := "joemamannnnn@joemama.com" 
 
-	// publisher()
-	//conn, err := createRabbitmqconn(rabbitmqHost)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	
+	expected_from := "noreply@gey.com"
+	expected_subject := "Verify your account"
+
 	d := gomail.NewDialer(smtpHost, smtpPort, smtpUser, smtpPass)
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	
-	err = sendVerifyEmail(d, "joemama@joemama.com", "Hej")
+	err := sendVerifyEmail(d, to_address, textSent)
 	if err != nil {
 		t.Errorf("lul %v", err)
 	}
-	
-	
+	resp, err := http.Get("http://localhost:1080/api/emails")
+	if err != nil {
+		t.Fatalf("Failed to get response because %v\n", err)
+	}
+	if resp.StatusCode != 200 {
+		t.Fatalf("expected %v got %v", 200, resp.StatusCode)
+	}
+
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+
+	var jsonData []map[string]interface{}
+	err = json.Unmarshal(body, &jsonData)
+	if err != nil {
+		t.Fatalf("%v\n", err)
+	}
+	first := jsonData[0]
+
+	subject := first["subject"]
+	text := first["text"]
+
+
+	var to string
+	{
+		to_ := first["to"].(map[string]interface{})
+		value := to_["value"].([]interface{})
+		value0 := value[0].(map[string]interface{})
+		address := value0["address"]
+
+		to = address.(string)
+	}
+
+	var from string
+	{
+		from_ := first["from"].(map[string]interface{})
+		value := from_["value"].([]interface{})
+		value0 := value[0].(map[string]interface{})
+		address := value0["address"]
+
+		from = address.(string)
+	}
+
+
+	if from != expected_from {
+		t.Errorf("Expected %s got %s", expected_from, from)
+	}
+
+	if to != to_address {
+		t.Errorf("Expected %s got %s", to_address, to)
+	}
+
+	if text != textSent {
+		t.Errorf("Expected %s got %s", textSent, text)
+	}
+
+	if subject != expected_subject {
+		t.Errorf("Expected %s got %s", expected_subject, subject)
+	}
+
 }
