@@ -22,13 +22,25 @@ import {
 import { CartItemAmount } from "@/components/Cart/CartItemAmount"
 import { DollarFormatter } from "@/components/DollarFormatter"
 import { trpc } from "@/server/trpc/client"
+import { toast } from "sonner"
 
 interface CartPageProps {}
 
 export default function CartPage({}: CartPageProps) {
-  // const count = trpc.cart.getMyCount.useQuery()
+  const utils = trpc.useUtils()
   const total = trpc.cart.getTotal.useQuery()
   const items = trpc.cart.getItems.useQuery()
+
+  const removeItem = trpc.cart.deleteProductItem.useMutation({
+    onError(error, variables, context) {
+      toast.error(error.message)
+    },
+    onSuccess(data, variables, context) {
+      utils.cart.getItems.invalidate()
+      utils.cart.getMyCount.invalidate()
+      utils.cart.getTotal.invalidate()
+    },
+  })
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
@@ -87,22 +99,16 @@ export default function CartPage({}: CartPageProps) {
                     </TableCell>
 
                     <TableCell className="text-right">
-                      {/* <form action={removeCartItemAction}> */}
-                      {/* <input
-                        readOnly
-                        hidden
-                        type="number"
-                        name="sciId"
-                        value={item.sci_id}
-                      /> */}
                       <Button
                         className="h-8 w-8"
                         size="icon"
                         variant="destructive"
+                        onClick={() =>
+                          removeItem.mutate({ id: item.product.id })
+                        }
                       >
                         <Trash size={16} />
                       </Button>
-                      {/* </form> */}
                     </TableCell>
                   </TableRow>
                 ))}

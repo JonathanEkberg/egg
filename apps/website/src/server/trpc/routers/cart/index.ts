@@ -4,6 +4,7 @@ import { createTRPCRouter } from "../../init"
 import { authProcedure } from "../../procedures"
 import { getItemsRoute } from "./getItems"
 import { addProductToCartRoute } from "./addProductToCart"
+import { deleteProductItemRoute } from "./deleteProductItem"
 
 const preparedGetShoppingCartCount = db
   .select({ total: sum(shoppingCartItemTable.amount) })
@@ -25,6 +26,7 @@ const preparedGetShoppingCartTotal = db
 export const cartRouter = createTRPCRouter({
   getItems: getItemsRoute,
   addProductTocCart: addProductToCartRoute,
+  deleteProductItem: deleteProductItemRoute,
   getMyCount: authProcedure.query(async function ({ ctx }) {
     const [result] = await preparedGetShoppingCartCount.execute({
       userId: ctx.user.id,
@@ -33,9 +35,12 @@ export const cartRouter = createTRPCRouter({
     return { count: Number(result.total) ?? 0 }
   }),
   getTotal: authProcedure.query(async function ({ ctx }) {
+    const start = performance.now()
     const [result] = await preparedGetShoppingCartTotal.execute({
       userId: ctx.user.id,
     })
+    const time = performance.now() - start
+    console.log(`Get total time: ${time}ms`)
 
     return { total: Number(result.totalPrice) ?? 0 }
   }),

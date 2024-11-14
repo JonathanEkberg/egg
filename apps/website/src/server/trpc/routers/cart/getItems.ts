@@ -2,8 +2,6 @@ import { db } from "@egg/database"
 import { sql } from "@egg/database/drizzle"
 import { TRPCError } from "@trpc/server"
 import { authProcedure } from "../../procedures"
-import { makeReviewSchema } from "@/lib/validation/product"
-import { z } from "zod"
 
 const preparedGetItems = db.query.shoppingCartItemTable
   .findMany({

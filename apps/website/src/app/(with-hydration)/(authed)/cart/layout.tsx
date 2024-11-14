@@ -1,8 +1,4 @@
-import { Header } from "@/components/Header"
-import { TRPCProvider } from "@/server/trpc/client"
-import { HydrateClient, trpc } from "@/server/trpc/server"
-import { cookies } from "next/headers"
-import { isLoggedIn } from "@/server/authentication"
+import { trpc } from "@/server/trpc/server"
 import { prefetchTimeout } from "@/app/utils/prefetchTimeout"
 
 export default async function CartLayout({
@@ -10,8 +6,7 @@ export default async function CartLayout({
 }: {
   children: React.ReactNode
 }) {
-  void (await prefetchTimeout([
-    // trpc.cart.getMyCount.prefetch(),
+  void (await Promise.allSettled([
     trpc.cart.getTotal.prefetch(),
     trpc.cart.getItems.prefetch(),
   ]))

@@ -8,7 +8,7 @@ import { and, desc, eq, sql } from "@egg/database/drizzle"
 import { baseProcedure } from "../../init"
 import { TRPCError } from "@trpc/server"
 import { authProcedure } from "../../procedures"
-import { deleteReviewSchema, makeReviewSchema } from "@/lib/validation/product"
+import { deleteReviewSchema } from "@/lib/validation/review"
 
 export const addProductToCartRoute = authProcedure
   .input(deleteReviewSchema)

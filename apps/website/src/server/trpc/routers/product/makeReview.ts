@@ -3,7 +3,7 @@ import { desc, sql } from "@egg/database/drizzle"
 import { baseProcedure } from "../../init"
 import { TRPCError } from "@trpc/server"
 import { authProcedure } from "../../procedures"
-import { makeReviewSchema } from "@/lib/validation/product"
+import { makeReviewSchema } from "@/lib/validation/review"
 
 const preparedCreateReview = db
   .insert(reviewTable)
