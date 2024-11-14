@@ -41,12 +41,14 @@ export function Home() {
                 <Link href={`/products/${d.id}`}>
                   <div className="flex items-center space-x-8">
                     <Image
-                      className="object-fit h-48 w-48 rounded-md"
+                      className="h-48 w-48 rounded-md"
                       width={192}
                       height={192}
+                      loading="lazy"
                       src={d.imageUrl}
                       alt={`Image for product '${d.name}'.`}
                     />
+
                     <div>
                       <div className="scroll-m-20 pb-2 text-3xl font-semibold tracking-tight first:mt-0">
                         {d.name}
