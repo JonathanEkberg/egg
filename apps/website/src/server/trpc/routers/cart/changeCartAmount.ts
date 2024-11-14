@@ -22,11 +22,18 @@ export const changeCartAmountRoute = authProcedure
           throw new Error("Decreasing by this much would put stock below zero!")
         }
 
-        await tx
-          .update(productTable)
-          .set({ stock: sql`${productTable.stock} + ${item!.amount}` })
+        await tx.update(productTable).set({
+          stock:
+            item!.amount > 0
+              ? sql`${productTable.stock} - ${input.amount}`
+              : sql`${productTable.stock} + ${Math.abs(input!.amount)}`,
+        })
+
         await tx.update(shoppingCartItemTable).set({
-          amount: sql`${shoppingCartItemTable.amount} + ${input.amount}`,
+          amount:
+            item!.amount > 0
+              ? sql`${shoppingCartItemTable.amount} + ${input!.amount}`
+              : sql`${productTable.stock} - ${Math.abs(input!.amount)}`,
         })
       })
     } catch (e) {
