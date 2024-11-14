@@ -140,6 +140,16 @@ export const userRelations = relations(userTable, ({ many }) => ({
   shoppingCartItems: many(shoppingCartItemTable),
 }))
 
+export const userEmailVerificationRelations = relations(
+  refreshTokenTable,
+  ({ one }) => ({
+    user: one(userTable, {
+      fields: [refreshTokenTable.userId],
+      references: [userTable.id],
+    }),
+  }),
+)
+
 export const refreshTokenRelations = relations(
   refreshTokenTable,
   ({ one, many }) => ({

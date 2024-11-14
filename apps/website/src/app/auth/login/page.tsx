@@ -37,11 +37,18 @@ export default function LoginPage({}: LoginPageProps) {
   const utils = trpc.useUtils()
   const login = trpc.auth.login.useMutation({
     async onSuccess(data, variables, context) {
-      toast.success("Logged in", {
-        description: "Taking you to the store page.",
-      })
-      router.push("/")
       utils.user.getMe.setData(undefined, data)
+      if (!data.emailVerified) {
+        router.push("/auth/verify")
+        toast.success("Logged in", {
+          description: "Taking you to the account verification page.",
+        })
+      } else {
+        router.push("/")
+        toast.success("Logged in", {
+          description: "Taking you to the store page.",
+        })
+      }
     },
     onError(error, variables, context) {
       toast.error("Couldn't login", {

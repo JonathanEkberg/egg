@@ -7,9 +7,47 @@ import { authProcedure, unAuthedProcedure } from "../procedures"
 import { z } from "zod"
 import { sendEmail } from "@/lib/mq"
 import { createSession, logout } from "@/server/authentication"
-import { and, eq, sql } from "@egg/database/drizzle"
-import { addMinutes, isPast } from "date-fns"
+import { eq, sql } from "@egg/database/drizzle"
+import { addMinutes, isFuture, isPast } from "date-fns"
 import { unstable_after } from "next/server"
+
+function checkSendUserEmailVerificationCode(
+  userId: string,
+  userEmail: string,
+  userName: string,
+) {
+  unstable_after(async () => {
+    try {
+      const existingCode = await db.query.userEmailVerificationTable.findFirst({
+        where: (t, { eq }) => eq(t.userId, userId),
+        columns: { id: true, expires: true },
+      })
+
+      if (existingCode && isFuture(existingCode.expires)) {
+        return
+      }
+
+      const code = Math.floor(Math.random() * 799999) + 100000
+      await db.insert(userEmailVerificationTable).values({
+        code,
+        expires: addMinutes(Date.now(), 10),
+        userId: userId,
+      })
+
+      const link = `http://localhost:3000/auth/verify?code=${encodeURIComponent(code)}`
+      const emailBody = `<h1>Hello, ${userName}</h1>
+<p>Here is your one time code to enter to verify your account: <b>${code}</b></p>
+<p>Alternatively use this link: <a href="${link}">${link}</a></p>`
+
+      console.log(`Sending verificatiom email to ${userEmail}`)
+      await sendEmail(userEmail, emailBody)
+      console.log(`Sent verificatiom email`)
+    } catch (e) {
+      console.error(e)
+      console.error("Failed sending verification email")
+    }
+  })
+}
 
 const preparedRegisterUser = db
   .insert(userTable)
@@ -157,29 +195,7 @@ export const authRouter = createTRPCRouter({
       emailVerified: user.emailVerified,
       role: user.role,
     })
-
-    unstable_after(async () => {
-      try {
-        const code = Math.floor(Math.random() * 799999) + 100000
-        await db.insert(userEmailVerificationTable).values({
-          code,
-          expires: addMinutes(Date.now(), 10),
-          userId: user.id,
-        })
-
-        const link = `http://localhost:3000/auth/verify?code=${encodeURIComponent(code)}`
-        const emailBody = `<h1>Hello mister ${input.name}</h1>
-<p>Here is your one time code to enter to verify your account: <b>${code}</b></p>
-<p>Alternatively use this link: <a href="${link}">${link}</a></p>`
-
-        console.log(`Sending verificatiom email to ${user.email}`)
-        await sendEmail(user.email, emailBody)
-        console.log(`Sent verificatiom email`)
-      } catch (e) {
-        console.error(e)
-        console.error("Failed sending verification email")
-      }
-    })
+    checkSendUserEmailVerificationCode(user.id, user.email, user.name)
 
     const { id, name, email, role, emailVerified } = user
     return { id, name, email, role, emailVerified }
@@ -239,6 +255,10 @@ export const authRouter = createTRPCRouter({
         code: "INTERNAL_SERVER_ERROR",
         message: "Could not sign you in. Try again.",
       })
+    }
+
+    if (!emailVerified) {
+      checkSendUserEmailVerificationCode(userId, email, name)
     }
 
     return { id: userId, name: existing.name, email, role, emailVerified }
