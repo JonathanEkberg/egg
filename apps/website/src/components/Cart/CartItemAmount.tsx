@@ -13,11 +13,13 @@ interface CartItemAmountProps {
   productId: string
   /** The default amount chosen for the cart item */
   defaultAmount: number
+  stock: number
 }
 
 export function CartItemAmount({
   defaultAmount,
   productId,
+  stock,
 }: CartItemAmountProps) {
   const [amount, setAmount] = useState<number>(defaultAmount)
   const [numEditing, setNumEditing] = useState<boolean>(false)
@@ -74,7 +76,9 @@ export function CartItemAmount({
         ) : (
           <>
             <Button
-              disabled={amount > 100_000 || changeAmount.isPending}
+              disabled={
+                stock === 0 || amount > 100_000 || changeAmount.isPending
+              }
               variant="secondary"
               size="icon"
               className="h-6 w-6"

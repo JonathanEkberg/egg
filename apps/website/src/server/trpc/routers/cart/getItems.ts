@@ -6,6 +6,7 @@ import { authProcedure } from "../../procedures"
 const preparedGetItems = db.query.shoppingCartItemTable
   .findMany({
     where: (t, { eq }) => eq(t.userId, sql.placeholder("userId")),
+    orderBy: (t, { desc }) => desc(t.createdAt),
     columns: {
       amount: true,
     },

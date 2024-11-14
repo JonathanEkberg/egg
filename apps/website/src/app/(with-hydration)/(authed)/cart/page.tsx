@@ -87,6 +87,7 @@ export default function CartPage({}: CartPageProps) {
                       <CartItemAmount
                         productId={item.product.id}
                         defaultAmount={item.amount}
+                        stock={item.product.stock}
                       />
                     </TableCell>
 
