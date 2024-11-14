@@ -44,23 +44,23 @@ export const refreshTokenTable = pgTable("refresh_token", {
   expires: timestamp("expires", { withTimezone: true }).notNull(),
   userId: uuid("user_id")
     .notNull()
-    .references(() => userTable.id, { onDelete: "restrict" }),
+    .references(() => userTable.id, { onDelete: "cascade" }),
 })
 
-export const userEmailVerification = pgTable("order", {
+export const userEmailVerificationTable = pgTable("user_email_verification", {
   ...base,
   code: integer("code").notNull(),
   expires: timestamp("expires", { withTimezone: true }).notNull(),
   userId: uuid("user_id")
     .notNull()
-    .references(() => userTable.id, { onDelete: "restrict" }),
+    .references(() => userTable.id, { onDelete: "cascade" }),
 })
 
 export const orderTable = pgTable("order", {
   ...base,
   userId: uuid("user_id")
     .notNull()
-    .references(() => userTable.id, { onDelete: "restrict" }),
+    .references(() => userTable.id, { onDelete: "cascade" }),
 })
 
 export const productTable = pgTable(
@@ -139,6 +139,16 @@ export const userRelations = relations(userTable, ({ many }) => ({
   reviews: many(reviewTable),
   shoppingCartItems: many(shoppingCartItemTable),
 }))
+
+export const userEmailVerificationRelations = relations(
+  refreshTokenTable,
+  ({ one }) => ({
+    user: one(userTable, {
+      fields: [refreshTokenTable.userId],
+      references: [userTable.id],
+    }),
+  }),
+)
 
 export const refreshTokenRelations = relations(
   refreshTokenTable,

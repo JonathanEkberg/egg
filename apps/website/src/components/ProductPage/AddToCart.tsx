@@ -12,12 +12,12 @@ interface AddToCartProps {
 
 export function AddToCart({ productId, productStock }: AddToCartProps) {
   const utils = trpc.useUtils()
-  const add = trpc.product.addProductToCart.useMutation({
+  const add = trpc.cart.addProductTocCart.useMutation({
     onError(error, variables, context) {
       toast.error(error.message)
     },
     onSuccess(data, variables, context) {
-      utils.user.getMyShoppingCartCount.invalidate()
+      utils.cart.getMyCount.invalidate()
       utils.product.getProduct.invalidate({ id: productId })
     },
   })

@@ -4,9 +4,9 @@ const nextConfig: NextConfig = {
   /* config options here */
   images: { unoptimized: true },
   output: "standalone",
-  // experimental: {
-  //   after: true,
-  // },
+  experimental: {
+    after: true,
+  },
 }
 
 export default nextConfig

@@ -214,6 +214,11 @@ async function refresh(cookies: ReadonlyRequestCookies, isSsr: boolean) {
     id: refreshTokenId,
   })
 
+  if (!refresh) {
+    await logout(cookies, isSsr)
+    return null
+  }
+
   // Expired
   if (isPast(refresh.expires)) {
     await logout(cookies, isSsr)
@@ -225,7 +230,16 @@ async function refresh(cookies: ReadonlyRequestCookies, isSsr: boolean) {
     ...userInfo,
     userId: userInfo.id,
   }
-  await createSession(cookies, session)
+  const result = await createSession(cookies, session)
+
+  if (result === true) {
+    after(async () => {
+      try {
+        preparedDeleteRefreshToken.execute({ refreshToken: refreshTokenId })
+      } catch {}
+    })
+  }
+
   return session
 }
 
@@ -248,7 +262,7 @@ export async function getSession(
   const result = jwt?.value ? await parseAccessToken(jwt.value) : null
 
   if (!isSsr && (!result || result?.type === "expired")) {
-    return refresh(cookies, isSsr)
+    return await refresh(cookies, isSsr)
   }
 
   if (result?.type === "success") {

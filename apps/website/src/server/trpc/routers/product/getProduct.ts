@@ -47,10 +47,22 @@ export const getProductRoute = baseProcedure
   )
   .query(async function ({ input }) {
     try {
-      return await getProductWithReviewsById.execute({
+      const product = await getProductWithReviewsById.execute({
         productId: input.id,
       })
+
+      if (!product) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Could not find product",
+        })
+      }
+
+      return product
     } catch (e) {
+      if (e instanceof TRPCError) {
+        throw e
+      }
       console.error(e)
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",

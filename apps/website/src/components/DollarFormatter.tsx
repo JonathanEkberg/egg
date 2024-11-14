@@ -16,7 +16,7 @@ export function DollarFormatter({ value, ...props }: DollarFormatterProps) {
   return (
     <span {...props}>
       <span className="text-muted-foreground">&#36;</span>
-      {formatter.format(value)}
+      <span className="font-mono">{formatter.format(value)}</span>
     </span>
   )
 }

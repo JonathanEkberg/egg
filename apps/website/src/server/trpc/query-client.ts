@@ -4,9 +4,9 @@ import superjson from "superjson"
 export function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
-      queries: {
-        staleTime: 5 * 1000,
-      },
+      // queries: {
+      //   staleTime: 5 * 1000,
+      // },
       dehydrate: {
         // serializeData: superjson.serialize,
         shouldDehydrateQuery: query =>

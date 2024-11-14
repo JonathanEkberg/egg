@@ -1,13 +1,53 @@
 import { baseProcedure, createTRPCRouter } from "../init"
-import { db, userTable } from "@egg/database"
+import { db, userEmailVerificationTable, userTable } from "@egg/database"
 import { TRPCError } from "@trpc/server"
 import { hashPassword, verifyPassword } from "@/server/password"
 import { loginSchema, registerSchema } from "@/lib/validation/auth"
-import { unAuthedProcedure } from "../procedures"
+import { authProcedure, unAuthedProcedure } from "../procedures"
 import { z } from "zod"
 import { sendEmail } from "@/lib/mq"
 import { createSession, logout } from "@/server/authentication"
-import { sql } from "@egg/database/drizzle"
+import { eq, sql } from "@egg/database/drizzle"
+import { addMinutes, isFuture, isPast } from "date-fns"
+import { unstable_after } from "next/server"
+
+function checkSendUserEmailVerificationCode(
+  userId: string,
+  userEmail: string,
+  userName: string,
+) {
+  unstable_after(async () => {
+    try {
+      const existingCode = await db.query.userEmailVerificationTable.findFirst({
+        where: (t, { eq }) => eq(t.userId, userId),
+        columns: { id: true, expires: true },
+      })
+
+      if (existingCode && isFuture(existingCode.expires)) {
+        return
+      }
+
+      const code = Math.floor(Math.random() * 799999) + 100000
+      await db.insert(userEmailVerificationTable).values({
+        code,
+        expires: addMinutes(Date.now(), 10),
+        userId: userId,
+      })
+
+      const link = `http://localhost:3000/auth/verify?code=${encodeURIComponent(code)}`
+      const emailBody = `<h1>Hello, ${userName}</h1>
+<p>Here is your one time code to enter to verify your account: <b>${code}</b></p>
+<p>Alternatively use this link: <a href="${link}">${link}</a></p>`
+
+      console.log(`Sending verificatiom email to ${userEmail}`)
+      await sendEmail(userEmail, emailBody)
+      console.log(`Sent verificatiom email`)
+    } catch (e) {
+      console.error(e)
+      console.error("Failed sending verification email")
+    }
+  })
+}
 
 const preparedRegisterUser = db
   .insert(userTable)
@@ -53,6 +93,71 @@ export const authRouter = createTRPCRouter({
         })
       }
     }),
+  verify: authProcedure
+    .input(
+      z.object({
+        code: z.number().min(0),
+      }),
+    )
+    .mutation(async function ({ ctx, input }) {
+      try {
+        const result = await db.query.userEmailVerificationTable.findFirst({
+          where: (t, { eq }) => eq(t.userId, ctx.user.id),
+          columns: {
+            id: true,
+            expires: true,
+            code: true,
+          },
+        })
+
+        if (!result) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message:
+              "No active verifications. Go to your account and request a new verification code.",
+          })
+        }
+
+        if (isPast(result.expires)) {
+          await db
+            .delete(userEmailVerificationTable)
+            .where(eq(userEmailVerificationTable.id, result.id))
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "This verification code has expired.",
+          })
+        }
+
+        if (result.code !== input.code) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Wrong verification code.",
+          })
+        }
+
+        await Promise.all([
+          db
+            .update(userTable)
+            .set({ emailVerified: true })
+            .where(eq(userTable.id, ctx.user.id)),
+          db
+            .delete(userEmailVerificationTable)
+            .where(eq(userEmailVerificationTable.userId, ctx.user.id)),
+        ])
+
+        return true
+      } catch (e) {
+        if (e instanceof TRPCError) {
+          throw e
+        }
+
+        console.error(e)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to check email verification code.",
+        })
+      }
+    }),
   register: unAuthedProcedure.input(registerSchema).mutation(async function ({
     ctx,
     input,
@@ -90,6 +195,7 @@ export const authRouter = createTRPCRouter({
       emailVerified: user.emailVerified,
       role: user.role,
     })
+    checkSendUserEmailVerificationCode(user.id, user.email, user.name)
 
     const { id, name, email, role, emailVerified } = user
     return { id, name, email, role, emailVerified }
@@ -149,6 +255,10 @@ export const authRouter = createTRPCRouter({
         code: "INTERNAL_SERVER_ERROR",
         message: "Could not sign you in. Try again.",
       })
+    }
+
+    if (!emailVerified) {
+      checkSendUserEmailVerificationCode(userId, email, name)
     }
 
     return { id: userId, name: existing.name, email, role, emailVerified }

@@ -16,7 +16,7 @@ export default async function RootLayout({
   if (isLoggedIn(cookieStore)) {
     void (await prefetchTimeout([
       trpc.user.getMe.prefetch(),
-      trpc.user.getMyShoppingCartCount.prefetch(),
+      trpc.cart.getMyCount.prefetch(),
     ]))
   }
 
