@@ -12,7 +12,5 @@ export const productRouter = createTRPCRouter({
   getProducts: getProductsRoute,
   getProductsPagination: getProductsPaginationRoute,
   getProduct: getProductRoute,
-  makeReview: makeReviewRoute,
-  deleteReview: deleteReviewRoute,
   addProductToCart: addProductToCart,
 })

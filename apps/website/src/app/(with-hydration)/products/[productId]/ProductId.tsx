@@ -1,54 +1,16 @@
 "use client"
-import React from "react"
-// import { pool } from "@/lib/database"
+import React, { useEffect } from "react"
 import { BoxIcon, StarIcon, Trash } from "lucide-react"
 import dayjs from "dayjs"
 import { trpc } from "@/server/trpc/client"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
-// import { AddToCart } from "@/components/ProductPage/AddToCart"
 import { MakeReviewButton } from "@/components/ProductPage/MakeReviewButton"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { AddToCart } from "@/components/ProductPage/AddToCart"
-// const getProduct = async (id: number) => {
-//   const data = await pool.execute(
-//     `SELECT id, name, description, image, price_usd, stock FROM product WHERE id = ?;`,
-//     [id],
-//   )
-
-//   return (
-//     data[0] as
-//       | [
-//           {
-//             id: number
-//             name: string
-//             description: string
-//             image: string
-//             price_usd: number | null
-//             stock: number | null
-//           },
-//         ]
-//       | []
-//   )[0]
-// }
-
-// async function getReviews(product_id: number) {
-//   const data = await pool.execute(
-//     "SELECT review.id, stars, text, user_id, user.name as u_name, review.created_at FROM review INNER JOIN user ON review.user_id = user.id WHERE product_id=? ORDER BY created_at DESC;",
-//     [product_id],
-//   )
-//   return data[0] as {
-//     id: number
-//     stars: number
-//     text: string
-//     user_id: number
-//     u_name: string
-//     created_at: string
-//   }[]
-// }
 
 function Review({
   id,
@@ -68,7 +30,7 @@ function Review({
   // const router = useRouter()
   const me = trpc.user.getMe.useQuery()
   const utils = trpc.useUtils()
-  const deleteReview = trpc.product.deleteReview.useMutation({
+  const deleteReview = trpc.review.deleteReview.useMutation({
     onError(error, variables, context) {
       toast.error(error.message)
     },
@@ -129,13 +91,25 @@ interface ProductPageProps {
 }
 
 export function ProductPageComponent({ productId }: ProductPageProps) {
+  const router = useRouter()
   // console.log(typeof trpc.product)
   // console.log(typeof trpc.product.getProduct)
-  const productQuery = trpc.product.getProduct.useQuery({ id: productId })
+  const productQuery = trpc.product.getProduct.useQuery(
+    { id: productId },
+    {
+      retry: false,
+    },
+  )
   // const [product, reviews] = await Promise.all([
   //   getProduct(productId),
   //   getReviews(productId),
   // ])
+
+  useEffect(() => {
+    if (productQuery.isError && productQuery.error.data?.code === "NOT_FOUND") {
+      router.replace("/")
+    }
+  }, [productQuery.error])
 
   if (productQuery.isLoading || !productQuery.data) {
     return null

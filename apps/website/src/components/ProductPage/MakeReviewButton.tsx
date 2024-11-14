@@ -30,7 +30,7 @@ export function MakeReviewButton({ productId }: MakeReviewButtonProps) {
   const [stars, setStars] = useState<number>(4)
 
   const utils = trpc.useUtils()
-  const makeReview = trpc.product.makeReview.useMutation({
+  const makeReview = trpc.review.makeReview.useMutation({
     onError(error, variables, context) {
       toast.error(error.message)
     },
