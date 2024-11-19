@@ -9,6 +9,11 @@ services:
       - ./apps/website/.env.local
     ports:
       - 8080:3000
+  email:
+    image: egg-email:latest
+    build:
+      dockerfile: ./Dockerfile
+      context: ./apps/email
   # Backend services
   database:
     container_name: database
