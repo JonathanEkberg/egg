@@ -19,6 +19,15 @@ export const userRole = ["user", "admin", "super_admin"] as const
 export type UserRole = (typeof userRole)[number]
 export const userRoleEnum = pgEnum("role", userRole)
 
+export const orderStatus = [
+  "pending",
+  "processing",
+  "shipped",
+  "delivered",
+] as const
+export type OrderStatus = (typeof orderStatus)[number]
+export const orderStatusEnum = pgEnum("order_status", orderStatus)
+
 const base = {
   id: uuid("id").defaultRandom().primaryKey(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -58,6 +67,7 @@ export const userEmailVerificationTable = pgTable("user_email_verification", {
 
 export const orderTable = pgTable("order", {
   ...base,
+  status: orderStatusEnum("status").default("pending").notNull(),
   userId: uuid("user_id")
     .notNull()
     .references(() => userTable.id, { onDelete: "cascade" }),
