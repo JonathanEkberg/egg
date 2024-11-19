@@ -6,6 +6,8 @@ import (
 	"github.com/wagslane/go-rabbitmq"
 	"github.com/go-gomail/gomail"
 	"crypto/tls"
+	"os"
+	"strconv"
 )
 
 
@@ -92,16 +94,21 @@ func sendVerifyEmail(d *gomail.Dialer, to_address string, body string) error {
 	return err
 }
 
-const (
-	rabbitmqHost = "amqp://guest:guest@localhost"
-	smtpHost = "localhost"
-	smtpPort = 1025
-	smtpUser = "user"
-	smtpPass = "123456"
-)
-
 func main() {
 
+	rabbitmqHost := os.Getenv("RABBIT_MQ_HOST")
+	smtpHost := os.Getenv("SMTP_HOST")
+	var smtpPort int
+	{
+		smtpPort_env := os.Getenv("SMTP_PORT")
+		var err error
+		smtpPort, err = strconv.Atoi(smtpPort_env)
+		if err != nil {
+			log.Fatalf("Expected port to be int but got '%s'", smtpPort_env)
+		}
+	}
+	smtpUser := os.Getenv("SMTP_USER")
+	smtpPass := os.Getenv("SMTP_PASS")
 
 	conn, err := rabbitmq.NewConn(
 		rabbitmqHost,
