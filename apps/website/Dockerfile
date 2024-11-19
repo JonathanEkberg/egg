@@ -29,9 +29,6 @@ COPY --from=pruner /app/out/full/ .
 ENV DATABASE_URL=postgres://egg:egg@localhost:5432/egg?schema=public&sslmode=disable
 RUN turbo run build --env-mode loose --filter=@egg/website -- --no-lint
 
-RUN tree apps/website/.next/standalone
-RUN ls -lah apps/website/.next
-
 ################################
 
 FROM base AS runner
