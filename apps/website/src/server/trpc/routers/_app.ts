@@ -4,6 +4,7 @@ import { userRouter } from "./user"
 import { productRouter } from "./product"
 import { reviewRouter } from "./review"
 import { cartRouter } from "./cart"
+import { orderRouter } from "./order"
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -11,6 +12,7 @@ export const appRouter = createTRPCRouter({
   product: productRouter,
   review: reviewRouter,
   cart: cartRouter,
+  order: orderRouter,
 })
 
 // export type definition of API
