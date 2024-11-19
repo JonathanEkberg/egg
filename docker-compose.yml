@@ -14,6 +14,8 @@ services:
     build:
       dockerfile: ./Dockerfile
       context: ./apps/email
+    env_file:
+      - ./apps/email/.env.docker
   # Backend services
   database:
     container_name: database
