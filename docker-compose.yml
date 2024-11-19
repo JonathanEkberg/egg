@@ -1,6 +1,7 @@
 services:
   # Apps
   website:
+    container_name: website
     image: egg-website:latest
     build:
       dockerfile: ./apps/website/Dockerfile
@@ -12,11 +13,21 @@ services:
       - rabbitmq
     ports:
       - 8080:3000
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://website:3000/ || exit 1
+      interval: 30s
+      timeout: 5s
+      start_period: 2s
+      start_interval: 3s
+      retries: 3
   email:
+    container_name: email
     image: egg-email:latest
     depends_on:
-      - rabbitmq
-      - smtp
+      rabbitmq:
+        condition: service_healthy
+      smtp:
+        condition: service_started
     build:
       dockerfile: ./Dockerfile
       context: ./apps/email
@@ -27,22 +38,43 @@ services:
     container_name: database
     image: postgres:17.0-alpine3.20
     restart: unless-stopped
+
     env_file:
       - .db.env
     ports:
       - "5432:5432"
     volumes:
       - database:/var/lib/postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "egg"]
+      interval: 30s
+      timeout: 15s
+      start_period: 2s
+      start_interval: 3s
+      retries: 5
   rabbitmq:
     container_name: rabbitmq
     image: rabbitmq:4.0.3-management-alpine
-
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 5s
+      start_period: 4s
+      start_interval: 3s
+      retries: 3
     ports:
       - 5672:5672
       - 15672:15672
   smtp:
     container_name: smtp
     image: reachfive/fake-smtp-server
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:1080/ || exit 1
+      interval: 30s
+      timeout: 5s
+      start_period: 4s
+      start_interval: 3s
+      retries: 3
     ports:
       - 1025:1025
       - 1080:1080
