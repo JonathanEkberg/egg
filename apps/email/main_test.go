@@ -13,6 +13,14 @@ import (
 
 func TestSendMail(t *testing.T) {
 
+	const (
+		rabbitmqHost = "amqp://guest:guest@localhost"
+		smtpHost = "localhost"
+		smtpPort = 1025
+		smtpUser = "user"
+		smtpPass = "123456"
+	)
+
 	textSent := "nyaste"
 	to_address := "joemamannnnn@joemama.com" 
 
