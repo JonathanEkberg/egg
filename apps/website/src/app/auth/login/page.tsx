@@ -36,7 +36,7 @@ export default function LoginPage({}: LoginPageProps) {
   const router = useRouter()
   const utils = trpc.useUtils()
   const login = trpc.auth.login.useMutation({
-    async onSuccess(data, variables, context) {
+    onSuccess(data, variables, context) {
       utils.user.getMe.setData(undefined, data)
       if (!data.emailVerified) {
         router.push("/auth/verify")
