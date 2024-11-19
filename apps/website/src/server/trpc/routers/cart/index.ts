@@ -1,5 +1,3 @@
-import { db, productTable, shoppingCartItemTable } from "@egg/database"
-import { sum, eq, sql } from "@egg/database/drizzle"
 import { createTRPCRouter } from "../../init"
 import { authProcedure } from "../../procedures"
 import { getItemsRoute } from "./getItems"
@@ -7,23 +5,7 @@ import { addProductToCartRoute } from "./addProductToCart"
 import { deleteProductItemRoute } from "./deleteProductItem"
 import { changeCartAmountRoute } from "./changeCartAmount"
 import { TRPCError } from "@trpc/server"
-
-const preparedGetShoppingCartCount = db
-  .select({ total: sum(shoppingCartItemTable.amount) })
-  .from(shoppingCartItemTable)
-  .where(eq(shoppingCartItemTable.userId, sql.placeholder("userId")))
-  .prepare("prepared_get_shopping_cart_count")
-
-const preparedGetShoppingCartTotal = db
-  .select({
-    totalPrice: sql<number>`
-        SUM(${productTable.priceUsd} * ${shoppingCartItemTable.amount})
-      `.as("total_price"),
-  })
-  .from(shoppingCartItemTable)
-  .innerJoin(productTable, eq(shoppingCartItemTable.productId, productTable.id))
-  .where(eq(shoppingCartItemTable.userId, sql.placeholder("userId")))
-  .prepare("prepared_get_shopping_cart_total")
+import { prepared } from "@egg/database/prepared"
 
 export const cartRouter = createTRPCRouter({
   getItems: getItemsRoute,
@@ -32,7 +14,7 @@ export const cartRouter = createTRPCRouter({
   deleteProductItem: deleteProductItemRoute,
   getMyCount: authProcedure.query(async function ({ ctx }) {
     try {
-      const [result] = await preparedGetShoppingCartCount.execute({
+      const [result] = await prepared.getShoppingCartCountByUserId.execute({
         userId: ctx.user.id,
       })
 
@@ -41,13 +23,13 @@ export const cartRouter = createTRPCRouter({
       console.error(e)
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: "Could not get your count.",
+        message: "Could not get your cart count.",
       })
     }
   }),
   getTotal: authProcedure.query(async function ({ ctx }) {
     try {
-      const [result] = await preparedGetShoppingCartTotal.execute({
+      const [result] = await prepared.getShoppingCartTotalByUserId.execute({
         userId: ctx.user.id,
       })
 
@@ -56,7 +38,7 @@ export const cartRouter = createTRPCRouter({
       console.error(e)
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: "Could not get your total.",
+        message: "Could not get your cart total.",
       })
     }
   }),

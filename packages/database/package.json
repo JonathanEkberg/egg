@@ -4,7 +4,8 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
-    "./drizzle": "./src/drizzle.ts"
+    "./drizzle": "./src/drizzle.ts",
+    "./prepared": "./src/prepared/index.ts"
   },
   "scripts": {
     "studio": "drizzle-kit studio",

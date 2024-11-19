@@ -26,7 +26,11 @@ RUN pnpm install --frozen-lockfile
 COPY --from=pruner /app/turbo.json ./turbo.json
 COPY --from=pruner /app/out/full/ .
 
-RUN turbo run build --filter=@egg/website -- --no-lint
+ENV DATABASE_URL=postgres://egg:egg@localhost:5432/egg?schema=public&sslmode=disable
+RUN turbo run build --env-mode loose --filter=@egg/website -- --no-lint
+
+RUN tree apps/website/.next/standalone
+RUN ls -lah apps/website/.next
 
 ################################
 
@@ -34,7 +38,7 @@ FROM base AS runner
 WORKDIR /app
 
 COPY --from=builder /app/apps/website/.next/standalone .
-COPY --from=builder /app/apps/website/.next/static ./.next/static
-COPY --from=builder /app/apps/website/public ./public
+COPY --from=builder /app/apps/website/.next/static apps/website/.next/static
+COPY --from=builder /app/apps/website/public apps/website/public
 
-CMD ["node", "server.js"]
+CMD ["node", "apps/website/server.js"]

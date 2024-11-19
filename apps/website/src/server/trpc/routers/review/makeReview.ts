@@ -4,22 +4,13 @@ import { baseProcedure } from "../../init"
 import { TRPCError } from "@trpc/server"
 import { authProcedure } from "../../procedures"
 import { makeReviewSchema } from "@/lib/validation/review"
-
-const preparedCreateReview = db
-  .insert(reviewTable)
-  .values({
-    productId: sql.placeholder("productId"),
-    stars: sql.placeholder("stars"),
-    text: sql.placeholder("text"),
-    userId: sql.placeholder("userId"),
-  })
-  .prepare("create_review")
+import { prepared } from "@egg/database/prepared"
 
 export const makeReviewRoute = authProcedure
   .input(makeReviewSchema)
   .mutation(async function ({ ctx, input }) {
     try {
-      return await preparedCreateReview.execute({
+      return await prepared.createReview.execute({
         userId: ctx.user.id,
         productId: input.productId,
         stars: input.stars,

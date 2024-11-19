@@ -7,7 +7,6 @@ import { z } from "zod"
 const query = db.query.productTable
   .findMany({
     orderBy: (t, { desc }) => desc(t.createdAt),
-    // where: (f, {like}) => f.name,
     offset: sql.placeholder("offset"),
     limit: sql.placeholder("limit"),
   })

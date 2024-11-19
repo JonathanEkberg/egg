@@ -1,25 +1,13 @@
-import { db, productTable, reviewTable } from "@egg/database"
-import { and, desc, eq, sql } from "@egg/database/drizzle"
-import { baseProcedure } from "../../init"
 import { TRPCError } from "@trpc/server"
 import { authProcedure } from "../../procedures"
 import { deleteReviewSchema } from "@/lib/validation/review"
-
-const preparedGetReviewById = db
-  .select({ userId: reviewTable.userId })
-  .from(reviewTable)
-  .where(eq(reviewTable.id, sql.placeholder("id")))
-  .prepare("get_review_by_id")
-const preparedDeleteReview = db
-  .delete(reviewTable)
-  .where(eq(reviewTable.id, sql.placeholder("id")))
-  .prepare("delete_review")
+import { prepared } from "@egg/database/prepared"
 
 export const deleteReviewRoute = authProcedure
   .input(deleteReviewSchema)
   .mutation(async function ({ ctx, input }) {
     try {
-      const [product] = await preparedGetReviewById.execute({ id: input.id })
+      const [product] = await prepared.getReviewById.execute({ id: input.id })
 
       if (product.userId !== ctx.user.id) {
         throw new TRPCError({
@@ -28,7 +16,7 @@ export const deleteReviewRoute = authProcedure
         })
       }
 
-      return await preparedDeleteReview.execute({
+      return await prepared.deleteReviewById.execute({
         id: input.id,
       })
     } catch (e) {
