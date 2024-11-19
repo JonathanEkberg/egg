@@ -1,6 +1,6 @@
 module github.com/JonathanEkberg/egg/apps/email
 
-go 1.23.0
+go 1.23
 
 require github.com/wagslane/go-rabbitmq v0.14.2
 
