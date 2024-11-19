@@ -8,7 +8,7 @@ let channel: amqp.Channel | undefined
 
 async function getChannel() {
   if (!channel) {
-    const conn = await amqp.connect("amqp://localhost:5672")
+    const conn = await amqp.connect(process.env.RABBIT_URL!)
     channel = await conn.createChannel()
   }
 
