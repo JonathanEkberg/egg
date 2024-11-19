@@ -19,11 +19,6 @@ services:
       - "5432:5432"
     volumes:
       - database:/var/lib/postgres
-  redis:
-    container_name: redis
-    image: valkey/valkey:8.0.1-alpine3.20
-    ports:
-      - 6379:6379
   rabbitmq:
     container_name: rabbitmq
     image: rabbitmq:4.0.3-management-alpine
