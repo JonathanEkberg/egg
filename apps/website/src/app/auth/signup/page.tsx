@@ -37,10 +37,17 @@ export default function SignupPage({}: SignupPageProps) {
   const utils = trpc.useUtils()
   const register = trpc.auth.register.useMutation({
     onSuccess(data, variables, context) {
-      toast.success("Logged in", {
-        description: "Taking you to the store page.",
-      })
-      router.push("/")
+      if (!data.emailVerified) {
+        router.push("/auth/verify")
+        toast.success("Registered", {
+          description: "Taking you to the account verification page.",
+        })
+      } else {
+        router.push("/")
+        toast.success("Registered", {
+          description: "Taking you to the store page.",
+        })
+      }
       utils.user.getMe.setData(undefined, data)
     },
     onError(error, variables, context) {
