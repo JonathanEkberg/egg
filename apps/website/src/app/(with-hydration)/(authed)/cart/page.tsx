@@ -23,6 +23,7 @@ import { CartItemAmount } from "@/components/Cart/CartItemAmount"
 import { DollarFormatter } from "@/components/DollarFormatter"
 import { trpc } from "@/server/trpc/client"
 import { toast } from "sonner"
+import { CartPurchaseButton } from "@/components/Cart/CartPurchaseButton"
 
 interface CartPageProps {}
 
@@ -130,15 +131,7 @@ export default function CartPage({}: CartPageProps) {
               value={total.data?.total ?? 0}
             />
           </div>
-          {/* <form action={purchaseAction}> */}
-          <Button
-            type="submit"
-            variant="default"
-            disabled={items.data?.length === 0}
-          >
-            Purchase
-          </Button>
-          {/* </form> */}
+          <CartPurchaseButton hasItems={items.data?.length !== 0} />
         </CardFooter>
       </Card>
     </div>

@@ -6,9 +6,11 @@ import { deleteProductItemRoute } from "./deleteProductItem"
 import { changeCartAmountRoute } from "./changeCartAmount"
 import { TRPCError } from "@trpc/server"
 import { prepared } from "@egg/database/prepared"
+import { purchaseRoute } from "./purchase"
 
 export const cartRouter = createTRPCRouter({
   getItems: getItemsRoute,
+  purchase: purchaseRoute,
   addProductTocCart: addProductToCartRoute,
   changeCartAmount: changeCartAmountRoute,
   deleteProductItem: deleteProductItemRoute,
