@@ -6,7 +6,7 @@ services:
       dockerfile: ./apps/website/Dockerfile
       context: .
     env_file:
-      - ./apps/website/.env.local
+      - ./apps/website/.env.docker
     ports:
       - 8080:3000
   email:
