@@ -7,10 +7,16 @@ services:
       context: .
     env_file:
       - ./apps/website/.env.docker
+    depends_on:
+      - database
+      - rabbitmq
     ports:
       - 8080:3000
   email:
     image: egg-email:latest
+    depends_on:
+      - rabbitmq
+      - smtp
     build:
       dockerfile: ./Dockerfile
       context: ./apps/email
@@ -30,6 +36,7 @@ services:
   rabbitmq:
     container_name: rabbitmq
     image: rabbitmq:4.0.3-management-alpine
+
     ports:
       - 5672:5672
       - 15672:15672
