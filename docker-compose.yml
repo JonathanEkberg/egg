@@ -1,6 +1,7 @@
 services:
   # Apps
   website:
+    image: egg-website:latest
     build:
       dockerfile: ./apps/website/Dockerfile
       context: .
