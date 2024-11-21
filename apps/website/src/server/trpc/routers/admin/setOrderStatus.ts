@@ -11,6 +11,7 @@ const preparedUpdateOrderStatus = db
     status: sql.placeholder("status") as any,
   })
   .where(eq(orderTable.id, sql.placeholder("orderId")))
+  .prepare("update_order_status")
 
 export const adminSetOrderStatusRoute = adminProcedure
   .input(z.object({ orderId: z.string().uuid(), status: z.enum(orderStatus) }))

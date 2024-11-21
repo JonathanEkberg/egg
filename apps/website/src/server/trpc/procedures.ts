@@ -53,3 +53,25 @@ export const adminProcedure = authProcedure.use(async function ({ next, ctx }) {
     },
   })
 })
+
+export const superAdminProcedure = adminProcedure.use(async function ({
+  next,
+  ctx,
+}) {
+  if (ctx.user.role !== "super_admin") {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "You must be a super admin in to do this.",
+    })
+  }
+
+  return next({
+    ctx: {
+      user: {
+        ...ctx.user,
+        role: ctx.user.role,
+      },
+      cookies: ctx.cookies,
+    },
+  })
+})

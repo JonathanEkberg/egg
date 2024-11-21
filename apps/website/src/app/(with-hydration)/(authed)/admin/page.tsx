@@ -1,4 +1,3 @@
-import { CreateProduct } from "@/components/CreateProduct"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -7,38 +6,49 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { getUser } from "@/lib/auth"
-// import { getUser } from "@/lib/user"
+import { getSession } from "@/server/authentication"
+import { cookies } from "next/headers"
 import Link from "next/link"
-import { redirect } from "next/navigation"
 import React from "react"
-
-const buttons: {
-  title: string
-  description: string
-  button: { link: string; name: string }
-}[] = [
-  {
-    title: "Create product",
-    description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    button: { link: "/admin/create-product", name: "Create product" },
-  },
-  // Visible at individual product pages instead
-  // {
-  //   title: "Edit product",
-  //   description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-  //   button: { link: "/admin/edit-product", name: "Edit product" },
-  // },
-  {
-    title: "Manage orders",
-    description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    button: { link: "/admin/orders", name: "Orders" },
-  },
-]
 
 interface AdminPageProps {}
 
 export default async function AdminPage({}: AdminPageProps) {
+  const cookieStore = await cookies()
+  const session = await getSession(cookieStore, true)
+
+  const buttons: {
+    title: string
+    description: string
+    button: { link: string; name: string }
+  }[] = [
+    {
+      title: "Create product",
+      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+      button: { link: "/admin/create-product", name: "Create product" },
+    },
+    // Visible at individual product pages instead
+    // {
+    //   title: "Edit product",
+    //   description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    //   button: { link: "/admin/edit-product", name: "Edit product" },
+    // },
+    {
+      title: "Manage orders",
+      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+      button: { link: "/admin/orders", name: "Orders" },
+    },
+    ...(session?.role === "super_admin"
+      ? [
+          {
+            title: "Manage accounts",
+            description: "Set which users have what permissions.",
+            button: { link: "/admin/accounts", name: "Manage" },
+          },
+        ]
+      : []),
+  ]
+
   return (
     <div className="container mx-auto max-w-4xl">
       <div className="grid grid-cols-2 gap-4">
