@@ -41,6 +41,9 @@ export function UserButton({ name, role }: UserButtonProps) {
         <DropdownMenuItem asChild>
           <Link href="/orders">My orders</Link>
         </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/account">Account</Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         {role !== "user" && (
           <>

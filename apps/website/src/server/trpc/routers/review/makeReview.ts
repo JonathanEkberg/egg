@@ -1,6 +1,3 @@
-import { db, productTable, reviewTable } from "@egg/database"
-import { desc, sql } from "@egg/database/drizzle"
-import { baseProcedure } from "../../init"
 import { TRPCError } from "@trpc/server"
 import { authProcedure } from "../../procedures"
 import { makeReviewSchema } from "@/lib/validation/review"

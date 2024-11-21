@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { AddToCart } from "@/components/ProductPage/AddToCart"
+import Link from "next/link"
 
 function Review({
   id,
@@ -92,6 +93,7 @@ interface ProductPageProps {
 
 export function ProductPageComponent({ productId }: ProductPageProps) {
   const router = useRouter()
+  const me = trpc.user.getMe.useQuery()
   // console.log(typeof trpc.product)
   // console.log(typeof trpc.product.getProduct)
   const productQuery = trpc.product.getProduct.useQuery(
@@ -178,6 +180,11 @@ export function ProductPageComponent({ productId }: ProductPageProps) {
             </div>
           </div>
           <AddToCart productId={product.id} productStock={product.stock ?? 0} />
+          {me.data?.role !== "user" && (
+            <Button asChild>
+              <Link href={`/admin/edit-product/${product.id}`}>Edit</Link>
+            </Button>
+          )}
           {/* <form action={addToCartAction}>
             <input hidden readOnly value={product.id} name="productId" />
             <Button type="submit" disabled={!product.stock}>

@@ -6,13 +6,7 @@ import React from "react"
 
 interface AdminCreateProductPageProps {}
 
-export default async function AdminCreateProductPage({}: AdminCreateProductPageProps) {
-  const user = await getUser()
-
-  if (!user || user.role === "user") {
-    return redirect("/")
-  }
-
+export default function AdminCreateProductPage({}: AdminCreateProductPageProps) {
   return (
     <div className="mx-auto w-full max-w-2xl">
       <CreateProduct />

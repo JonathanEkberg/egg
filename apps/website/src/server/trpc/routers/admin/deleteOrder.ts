@@ -1,27 +1,16 @@
 import { db, orderTable, productOrderTable, productTable } from "@egg/database"
 import { and, eq, sql } from "@egg/database/drizzle"
 import { TRPCError } from "@trpc/server"
-import { authProcedure } from "../../procedures"
+import { adminProcedure, authProcedure } from "../../procedures"
 import { deleteOrderSchema } from "@/lib/validation/order"
 
-export const deleteOrderRoute = authProcedure
+export const adminDeleteOrderRoute = adminProcedure
   .input(deleteOrderSchema)
   .mutation(async function ({ ctx, input }) {
     try {
       await db.transaction(async tx => {
-        const order = await tx.query.orderTable.findFirst({
-          where: (t, { eq }) => eq(t.userId, ctx.user.id),
-        })
-
-        if (!order) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Could not find the order to delete.",
-          })
-        }
-
         const productOrders = await tx.query.productOrderTable.findMany({
-          where: (t, { eq }) => and(eq(t.orderId, input.id)),
+          where: (t, { eq }) => eq(t.orderId, input.id),
           columns: { id: true, amount: true, productId: true },
         })
         console.log("PRODUCT ORDERS:", productOrders)
@@ -50,10 +39,6 @@ export const deleteOrderRoute = authProcedure
           )
       })
     } catch (e) {
-      if (e instanceof TRPCError) {
-        throw e
-      }
-
       console.error(e)
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",

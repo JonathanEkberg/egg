@@ -21,3 +21,23 @@ export const getOrdersByUserId = db.query.orderTable
     },
   })
   .prepare("orders_by_user_id")
+
+export const getAllOrders = db.query.orderTable
+  .findMany({
+    orderBy: (t, { desc }) => desc(t.createdAt),
+    columns: {
+      id: true,
+      createdAt: true,
+      updatedAt: true,
+      userId: true,
+      status: true,
+    },
+    with: {
+      productOrders: {
+        with: {
+          product: true,
+        },
+      },
+    },
+  })
+  .prepare("all_orders")

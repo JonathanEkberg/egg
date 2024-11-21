@@ -1,8 +1,8 @@
 import React from "react"
 // import { pool } from "@/lib/database"
-import { EditProduct } from "@/components/EditProduct"
 // import { getUser } from "@/lib/user"
 import { notFound, redirect } from "next/navigation"
+import { EditProduct } from "@/components/EditProduct"
 
 // async function getProduct(id: number) {
 //   const data = await pool.execute(
@@ -35,8 +35,8 @@ interface AdminCreateProductPageProps {
 export default async function AdminCreateProductPage(
   props: AdminCreateProductPageProps,
 ) {
-  return null
-  // const params = await props.params;
+  // return null
+  const params = await props.params
 
   // const {
   //   id
@@ -54,9 +54,9 @@ export default async function AdminCreateProductPage(
   //   notFound()
   // }
 
-  // return (
-  //   <div className="mx-auto w-full max-w-2xl">
-  //     <EditProduct {...product} />
-  //   </div>
-  // )
+  return (
+    <div className="mx-auto w-full max-w-2xl">
+      <EditProduct id={params.id} />
+    </div>
+  )
 }
