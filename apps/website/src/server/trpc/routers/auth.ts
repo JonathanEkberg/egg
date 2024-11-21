@@ -10,10 +10,7 @@ import { createSession, logout } from "@/server/authentication"
 import { and, eq, sql } from "@egg/database/drizzle"
 import { addMinutes, isFuture, isPast } from "date-fns"
 import { unstable_after } from "next/server"
-import {
-  checkSendUserEmailVerificationCode,
-  sendUserEmailVerificationCode,
-} from "@/lib/email"
+import { sendUserEmailVerificationCode } from "@/lib/email"
 
 const preparedRegisterUser = db
   .insert(userTable)
@@ -151,7 +148,7 @@ export const authRouter = createTRPCRouter({
       role: user.role,
     })
     unstable_after(() => {
-      checkSendUserEmailVerificationCode(user.id, user.email, user.name)
+      sendUserEmailVerificationCode(user.id, user.email, user.name)
     })
 
     const { id, name, email, role, emailVerified } = user
@@ -216,7 +213,7 @@ export const authRouter = createTRPCRouter({
 
     if (!emailVerified) {
       unstable_after(() => {
-        checkSendUserEmailVerificationCode(userId, email, name)
+        sendUserEmailVerificationCode(userId, email, name)
       })
     }
 
