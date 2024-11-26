@@ -9,10 +9,13 @@ import { ThemeButton } from "./ThemeButton"
 import { UserButton } from "./UserButton"
 import { ShoppingCartIcon } from "./ShoppingCartIcon"
 import { Skeleton } from "./ui/skeleton"
+import { useRouter } from "next/navigation"
 
-interface HeaderProps {}
+interface HeaderProps {
+  onlyLogout: boolean
+}
 
-export function Header({}: HeaderProps) {
+export function Header({ onlyLogout = false }: HeaderProps) {
   trpc.cart.getMyCount.usePrefetchQuery()
   const me = trpc.user.getMe.useQuery()
 
@@ -27,8 +30,9 @@ export function Header({}: HeaderProps) {
         />
         <h1 className="text-4xl font-bold tracking-tighter">Egg Store</h1>
       </Link>
-      {me.isLoading ? (
-        // {true ? (
+      {onlyLogout ? (
+        <LogoutButton />
+      ) : me.isLoading ? (
         <Skeleton className="h-8 w-32" />
       ) : (
         <div className="flex items-center space-x-2">
@@ -52,4 +56,12 @@ export function Header({}: HeaderProps) {
       )}
     </header>
   )
+}
+
+function LogoutButton() {
+  const router = useRouter()
+  const logout = trpc.auth.logout.useMutation({
+    onSuccess: () => router.push("/"),
+  })
+  return <Button onClick={() => logout.mutate()}>Logout</Button>
 }
