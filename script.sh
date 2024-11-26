@@ -1,9 +1,12 @@
 #!/bin/sh
 
-pnpm docker
+docker compose kill -f 
+docker compose rm -f
+docker volume prune -a -f
+
+docker compose up -d database --wait
 
 cd packages/database
-
 
 # Check if .env file exists
 if [ ! -f .env ]; then
@@ -13,4 +16,6 @@ fi
 #pnpm install
 pnpm push
 pnpm seed
+
+docker compose up -d --build --remove-orphans
 
