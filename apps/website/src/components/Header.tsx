@@ -12,7 +12,7 @@ import { Skeleton } from "./ui/skeleton"
 import { useRouter } from "next/navigation"
 
 interface HeaderProps {
-  onlyLogout: boolean
+  onlyLogout?: boolean
 }
 
 export function Header({ onlyLogout = false }: HeaderProps) {

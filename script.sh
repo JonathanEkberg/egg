@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 docker compose kill
 docker compose rm -f
