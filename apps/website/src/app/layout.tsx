@@ -1,4 +1,3 @@
-import type { Metadata } from "next"
 import "./globals.css"
 // import { ThemeProvider } from "@/components/ThemeProvider"
 import localFont from "next/font/local"
@@ -48,17 +47,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // const cookieStore = await cookies()
-
-  // If logged in then prefetch header content on the server to avoid flickering
-  // if (cookieStore.has("uid")) {
-  //   void (await Promise.all([
-  //     trpc.user.getMe.prefetch(),
-  //     trpc.user.getMyShoppingCartCount.prefetch(),
-  //     trpc.product.getProducts.prefetch(),
-  //   ]))
-  // }
-
   return (
     <html
       lang="en"

@@ -96,6 +96,14 @@ export const authRouter = createTRPCRouter({
             .delete(userEmailVerificationTable)
             .where(eq(userEmailVerificationTable.userId, ctx.user.id)),
         ])
+        await createSession(ctx.cookies, {
+          userId: ctx.user.id,
+          name: ctx.user.name,
+          email: ctx.user.email,
+          // They are noe 2FA'd
+          emailVerified: true,
+          role: ctx.user.role,
+        })
 
         return true
       } catch (e) {
@@ -144,7 +152,7 @@ export const authRouter = createTRPCRouter({
       userId: user.id,
       name: user.name,
       email: user.email,
-      emailVerified: user.emailVerified,
+      emailVerified: false,
       role: user.role,
     })
     unstable_after(() => {
@@ -200,7 +208,8 @@ export const authRouter = createTRPCRouter({
       name,
       userId,
       email,
-      emailVerified,
+      // Set to false so they have to do email 2FA
+      emailVerified: false,
       role,
     })
 
@@ -211,11 +220,9 @@ export const authRouter = createTRPCRouter({
       })
     }
 
-    if (!emailVerified) {
-      unstable_after(() => {
-        sendUserEmailVerificationCode(userId, email, name)
-      })
-    }
+    unstable_after(() => {
+      sendUserEmailVerificationCode(userId, email, name)
+    })
 
     return { id: userId, name: existing.name, email, role, emailVerified }
   }),

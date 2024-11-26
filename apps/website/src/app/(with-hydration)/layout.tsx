@@ -1,9 +1,11 @@
 import { Header } from "@/components/Header"
-import { TRPCProvider } from "@/server/trpc/client"
 import { HydrateClient, trpc } from "@/server/trpc/server"
 import { cookies } from "next/headers"
 import { prefetchTimeout } from "../utils/prefetchTimeout"
-import { isLoggedIn } from "@/server/authentication"
+import { getSession, isLoggedIn } from "@/server/authentication"
+import { redirect } from "next/navigation"
+import { sendUserEmailVerificationCode } from "@/lib/email"
+import { unstable_after } from "next/server"
 
 export default async function RootLayout({
   children,
@@ -11,6 +13,14 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
   const cookieStore = await cookies()
+  const session = await getSession(cookieStore, true)
+
+  if (session && !session.emailVerified) {
+    unstable_after(() => {
+      sendUserEmailVerificationCode(session.userId, session.email, session.name)
+    })
+    redirect("/auth/verify")
+  }
 
   // Prefetch header content if logged in
   if (isLoggedIn(cookieStore)) {
