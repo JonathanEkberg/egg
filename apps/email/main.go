@@ -65,7 +65,7 @@ func consumer(conn *rabbitmq.Conn, d *gomail.Dialer) {
 			
 			err = sendVerifyEmail(d, jemail.Data.To, jemail.Data.Body);
 			if err != nil {
-				log.Printf("Failed to send email");
+				log.Printf("Failed to send email because of %v", err);
 				return rabbitmq.NackRequeue
 			}
 
