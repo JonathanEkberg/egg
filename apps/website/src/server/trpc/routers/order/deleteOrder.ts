@@ -10,7 +10,8 @@ export const deleteOrderRoute = authProcedure
     try {
       await db.transaction(async tx => {
         const order = await tx.query.orderTable.findFirst({
-          where: (t, { eq }) => eq(t.userId, ctx.user.id),
+          where: (t, { eq }) =>
+            and(eq(t.userId, ctx.user.id), eq(t.id, input.id)),
         })
 
         if (!order) {
@@ -24,11 +25,9 @@ export const deleteOrderRoute = authProcedure
           where: (t, { eq }) => and(eq(t.orderId, input.id)),
           columns: { id: true, amount: true, productId: true },
         })
-        console.log("PRODUCT ORDERS:", productOrders)
 
         // Restore the product stock
         for (const p of productOrders) {
-          console.log(p)
           await tx
             .update(productTable)
             .set({

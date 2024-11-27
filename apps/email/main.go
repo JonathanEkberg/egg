@@ -78,7 +78,7 @@ func sendVerifyEmail(d *gomail.Dialer, to_address string, body string) error {
 
 	m.SetHeader("From", "noreply@gey.com")
 	m.SetHeader("To", to_address)
-	m.SetHeader("Subject", "Verify your account")
+	m.SetHeader("Subject", "Verify your login to account")
 
 	m.SetBody("text/html", body)
 

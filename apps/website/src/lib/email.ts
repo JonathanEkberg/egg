@@ -29,7 +29,7 @@ export async function sendUserEmailVerificationCode(
     url.searchParams.set("code", String(code))
     const link = url.toString()
     const emailBody = `<h1>Hello, ${userName}</h1>
-<p>Here is your one time code to enter to verify your account: <b>${code}</b></p>
+<p>Here is your one time code to enter to verify your login to your account: <b>${code}</b></p>
 <p>Alternatively use this link: <a href="${link}">${link}</a></p>`
 
     console.log(`Sending verificatiom email to ${userEmail}`)

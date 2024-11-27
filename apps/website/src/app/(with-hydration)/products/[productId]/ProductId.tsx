@@ -132,7 +132,7 @@ export function ProductPageComponent({ productId }: ProductPageProps) {
   // }
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-8 pt-8">
+    <div className="mx-auto w-full max-w-3xl space-y-8 pt-8">
       <div className="flex items-center space-x-6">
         <Image
           className="rounded-xl"
@@ -180,7 +180,7 @@ export function ProductPageComponent({ productId }: ProductPageProps) {
             </div>
           </div>
           <AddToCart productId={product.id} productStock={product.stock ?? 0} />
-          {me.data?.role !== "user" && (
+          {me.data && me.data?.role !== "user" && (
             <Button asChild>
               <Link href={`/admin/edit-product/${product.id}`}>Edit</Link>
             </Button>

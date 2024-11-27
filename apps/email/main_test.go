@@ -1,35 +1,34 @@
 package main
 
 import (
-	"testing"
-	"github.com/go-gomail/gomail"
 	"crypto/tls"
-	"net/http"
 	"encoding/json"
 	"io"
+	"net/http"
+	"testing"
+
+	"github.com/go-gomail/gomail"
 )
-
-
 
 func TestSendMail(t *testing.T) {
 
 	const (
 		rabbitmqHost = "amqp://guest:guest@localhost"
-		smtpHost = "localhost"
-		smtpPort = 1025
-		smtpUser = "user"
-		smtpPass = "123456"
+		smtpHost     = "localhost"
+		smtpPort     = 1025
+		smtpUser     = "user"
+		smtpPass     = "123456"
 	)
 
 	textSent := "nyaste"
-	to_address := "joemamannnnn@joemama.com" 
+	to_address := "joemamannnnn@joemama.com"
 
 	expected_from := "noreply@gey.com"
-	expected_subject := "Verify your account"
+	expected_subject := "Verify your login to account"
 
 	d := gomail.NewDialer(smtpHost, smtpPort, smtpUser, smtpPass)
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-	
+
 	err := sendVerifyEmail(d, to_address, textSent)
 	if err != nil {
 		t.Errorf("Failed to send because %v\n", err)
@@ -55,7 +54,6 @@ func TestSendMail(t *testing.T) {
 	subject := first["subject"]
 	text := first["text"]
 
-
 	var to string
 	{
 		to_ := first["to"].(map[string]interface{})
@@ -75,7 +73,6 @@ func TestSendMail(t *testing.T) {
 
 		from = address.(string)
 	}
-
 
 	if from != expected_from {
 		t.Errorf("Expected %s got %s\n", expected_from, from)

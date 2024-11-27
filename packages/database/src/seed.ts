@@ -30,7 +30,8 @@ const eggs: string[] = [
 ]
 
 async function seed() {
-  const random = [...eggs].sort(() => Math.random() - 1)
+  const random = [...eggs]
+  random.sort(() => Math.random() - 1)
   const values: {
     title: string
     description: string

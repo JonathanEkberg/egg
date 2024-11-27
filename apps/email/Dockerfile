@@ -26,7 +26,7 @@ WORKDIR /app
 
 COPY --from=build-stage /dockerEmail /dockerEmail
 
-EXPOSE 8080
+# EXPOSE 8080
 
 #USER nonroot:nonroot
 

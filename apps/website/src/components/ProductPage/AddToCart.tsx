@@ -26,9 +26,8 @@ export function AddToCart({ productId, productStock }: AddToCartProps) {
     <Button
       type="button"
       onClick={() => add.mutate({ id: productId })}
-      disabled={add.isPending || !productStock}
+      disabled={add.isPending || productStock < 1}
     >
-      {/* {add.isPending && <Loader className="mr-2 h-4 w-4 animate-spin" />} */}
       Add to cart
     </Button>
   )
