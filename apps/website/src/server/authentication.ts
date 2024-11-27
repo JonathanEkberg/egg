@@ -117,6 +117,25 @@ export type SessionInfo = {
   role: UserRole
 }
 
+export function createDummySession({
+  name,
+  userId,
+  email,
+  emailVerified,
+  role,
+}: SessionInfo): Promise<string | null> {
+  return createAccessToken(
+    {
+      name,
+      userId,
+      email,
+      role,
+      emailVerified,
+    },
+    JWT_EXPIRES_IN_SECONDS,
+  )
+}
+
 export async function createSession(
   cookies: ReadonlyRequestCookies,
   { name, userId, email, emailVerified, role }: SessionInfo,
@@ -259,7 +278,9 @@ export async function getSession(
   }
 
   const jwt = cookies.get(JWT_COOKIE_NAME)
+  console.log("JWT:", jwt)
   const result = jwt?.value ? await parseAccessToken(jwt.value) : null
+  console.log("RESULT:", result)
 
   if (!isSsr && (!result || result?.type === "expired")) {
     return await refresh(cookies, isSsr)
