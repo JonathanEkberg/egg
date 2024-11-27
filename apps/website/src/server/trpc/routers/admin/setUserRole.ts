@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server"
-import { adminProcedure } from "../../procedures"
+import { superAdminProcedure } from "../../procedures"
 import { z } from "zod"
 import { db, userRole, userTable } from "@egg/database"
 import { eq, sql } from "@egg/database/drizzle"
@@ -12,7 +12,7 @@ const preparedUpdateUserRole = db
   .where(eq(userTable.id, sql.placeholder("userId")))
   .prepare("update_user_role")
 
-export const adminSetUserRoleRoute = adminProcedure
+export const adminSetUserRoleRoute = superAdminProcedure
   .input(z.object({ userId: z.string().uuid(), role: z.enum(userRole) }))
   .mutation(async function ({ input }) {
     try {

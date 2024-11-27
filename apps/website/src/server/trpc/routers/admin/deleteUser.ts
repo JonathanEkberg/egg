@@ -1,10 +1,10 @@
 import { db, userTable } from "@egg/database"
 import { eq } from "@egg/database/drizzle"
 import { TRPCError } from "@trpc/server"
-import { adminProcedure } from "../../procedures"
+import { superAdminProcedure } from "../../procedures"
 import { z } from "zod"
 
-export const adminDeleteUserRoute = adminProcedure
+export const adminDeleteUserRoute = superAdminProcedure
   .input(z.object({ id: z.string().uuid() }))
   .mutation(async function ({ ctx, input }) {
     try {
