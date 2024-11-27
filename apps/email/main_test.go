@@ -23,7 +23,7 @@ func TestSendMail(t *testing.T) {
 	textSent := "nyaste"
 	to_address := "joemamannnnn@joemama.com"
 
-	expected_from := "noreply@gey.com"
+	expected_from := "noreply@egg.com"
 	expected_subject := "Verify your login to account"
 
 	d := gomail.NewDialer(smtpHost, smtpPort, smtpUser, smtpPass)

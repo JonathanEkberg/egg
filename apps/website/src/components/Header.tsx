@@ -10,6 +10,7 @@ import { UserButton } from "./UserButton"
 import { ShoppingCartIcon } from "./ShoppingCartIcon"
 import { Skeleton } from "./ui/skeleton"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 interface HeaderProps {
   onlyLogout?: boolean
@@ -61,7 +62,13 @@ export function Header({ onlyLogout = false }: HeaderProps) {
 function LogoutButton() {
   const router = useRouter()
   const logout = trpc.auth.logout.useMutation({
-    onSuccess: () => router.push("/"),
+    onSuccess: data => {
+      if (data === true) {
+        router.push("/")
+      } else {
+        toast.error("Couldn't log you out.")
+      }
+    },
   })
   return <Button onClick={() => logout.mutate()}>Logout</Button>
 }

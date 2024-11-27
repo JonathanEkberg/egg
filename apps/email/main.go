@@ -76,7 +76,7 @@ func consumer(conn *rabbitmq.Conn, d *gomail.Dialer) {
 func sendVerifyEmail(d *gomail.Dialer, to_address string, body string) error {
 	m := gomail.NewMessage()
 
-	m.SetHeader("From", "noreply@gey.com")
+	m.SetHeader("From", "noreply@egg.com")
 	m.SetHeader("To", to_address)
 	m.SetHeader("Subject", "Verify your login to account")
 
