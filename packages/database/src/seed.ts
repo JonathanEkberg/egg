@@ -30,8 +30,6 @@ const eggs: string[] = [
 ]
 
 async function seed() {
-  const random = [...eggs]
-  random.sort(() => Math.random() - 1)
   const values: {
     title: string
     description: string
@@ -40,8 +38,8 @@ async function seed() {
   }[] = []
 
   const date = new Date()
-  for (let i = 0; i < random.length; i++) {
-    const egg = random[i]
+  for (let i = 0; i < eggs.length; i++) {
+    const egg = eggs[i]
     const now = new Date(date.valueOf() + i * 100)
     values.push({
       title: egg,
@@ -51,6 +49,7 @@ async function seed() {
       now,
     })
   }
+  values.sort(() => Math.random() - 1)
 
   console.log(`Upserting ${values.length} products...`)
   const start = performance.now()
@@ -61,11 +60,11 @@ async function seed() {
       name: v.title,
       description: v.description,
       imageUrl: v.image,
-      priceUsd: String(
+      priceUsd: (
         Math.floor(Math.random() * 15) +
-          5 +
-          Number((Math.random() * 0.95 + 0.05).toFixed(2)),
-      ),
+        5 +
+        Number((Math.random() * 0.95 + 0.05).toFixed(2))
+      ).toFixed(2),
       stock: Math.floor(Math.random() * 50) + 10,
     })),
   )
