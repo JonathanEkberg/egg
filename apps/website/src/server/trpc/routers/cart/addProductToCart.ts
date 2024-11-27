@@ -25,6 +25,7 @@ export const addProductToCartRoute = authProcedure
         await tx
           .update(productTable)
           .set({ stock: sql`${productTable.stock} - 1` })
+          .where(eq(productTable.id, input.id))
 
         const shoppingCartItem = await tx.query.shoppingCartItemTable.findFirst(
           {
