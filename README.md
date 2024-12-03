@@ -43,6 +43,9 @@ docker compose up -d database --wait
 # Change to packages/database directory
 cd packages/database
 
+# Copy and pase .env.template so you have .env file (needed for the push, seed and studio script later)
+cp .env.template .env
+
 # Push the database schema
 pnpm push
 # Seed database with some egg products
