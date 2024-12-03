@@ -3,6 +3,8 @@
 **/dist
 **/node_modules
 
+scripts
+
 **/.env*
 **/.next
 **/next-env.d.ts
