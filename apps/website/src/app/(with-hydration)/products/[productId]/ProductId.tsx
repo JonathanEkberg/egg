@@ -102,10 +102,15 @@ export function ProductPageComponent({ productId }: ProductPageProps) {
       retry: false,
     },
   )
-  // const [product, reviews] = await Promise.all([
-  //   getProduct(productId),
-  //   getReviews(productId),
-  // ])
+  const deleteProduct = trpc.product.deleteProduct.useMutation({
+    onSuccess(data, variables, context) {
+      toast("Product deleted")
+      router.replace("/")
+    },
+    onError(error) {
+      toast.error(error.message)
+    },
+  })
 
   useEffect(() => {
     if (productQuery.isError && productQuery.error.data?.code === "NOT_FOUND") {
@@ -181,9 +186,14 @@ export function ProductPageComponent({ productId }: ProductPageProps) {
           </div>
           <AddToCart productId={product.id} productStock={product.stock ?? 0} />
           {me.data && me.data?.role !== "user" && (
+            <div className="flex items-center gap-2">
             <Button asChild>
               <Link href={`/admin/edit-product/${product.id}`}>Edit</Link>
             </Button>
+            <Button variant="destructive" size="icon" onClick={() => deleteProduct.mutate({id:product.id})} disabled={deleteProduct.isPending}>
+              <Trash />
+            </Button>
+            </div>
           )}
           {/* <form action={addToCartAction}>
             <input hidden readOnly value={product.id} name="productId" />

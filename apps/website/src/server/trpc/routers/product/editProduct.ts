@@ -15,6 +15,7 @@ export const editProductRoute = adminProcedure
       const [result] = await prepared.editProduct.execute({
         id: input.id,
         name: input.name,
+        description: input.description,
         imageUrl: input.imageUrl,
         priceUsd: input.priceUsd,
         stock: input.stock,

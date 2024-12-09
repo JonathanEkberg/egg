@@ -6,6 +6,7 @@ export const createProduct = db
   .insert(productTable)
   .values({
     name: sql.placeholder("name"),
+    description: sql.placeholder("description") as any,
     imageUrl: sql.placeholder("imageUrl"),
     priceUsd: sql.placeholder("priceUsd"),
     stock: sql.placeholder("stock"),
@@ -17,6 +18,7 @@ export const editProduct = db
   .update(productTable)
   .set({
     name: sql.placeholder("name") as any,
+    description: sql.placeholder("description") as any,
     imageUrl: sql.placeholder("imageUrl") as any,
     priceUsd: sql.placeholder("priceUsd") as any,
     stock: sql.placeholder("stock") as any,
