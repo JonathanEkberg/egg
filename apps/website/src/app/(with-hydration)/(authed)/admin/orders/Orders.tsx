@@ -28,7 +28,7 @@ import {
 import { useState } from "react"
 
 export function Orders() {
-  const orders = trpc.order.getOrders.useQuery()
+  const orders = trpc.admin.getOrders.useQuery()
 
   return (
     <div className="mx-auto w-full max-w-2xl">
@@ -105,7 +105,7 @@ export function CancelOrderButton({
   disabled,
 }: CancelOrderButtonProps) {
   const utils = trpc.useUtils()
-  const deleteOrder = trpc.order.deleteOrder.useMutation({
+  const deleteOrder = trpc.admin.deleteOrder.useMutation({
     onSuccess(data, variables, context) {
       utils.order.getOrders.invalidate()
     },

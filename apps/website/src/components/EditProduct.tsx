@@ -93,6 +93,7 @@ export const EditProduct = memo(function EditProduct({ id }: EditProductProps) {
     resolver: zodResolver(createProductSchema),
     defaultValues: {
       name: data.data?.name,
+      description: data.data?.description ?? undefined,
       imageUrl: data.data?.imageUrl,
       priceUsd: data.data?.priceUsd,
       stock: data.data?.stock,

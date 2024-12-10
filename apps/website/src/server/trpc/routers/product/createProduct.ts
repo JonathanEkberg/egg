@@ -11,6 +11,7 @@ export const createProductRoute = adminProcedure
     try {
       const [result] = await prepared.createProduct.execute({
         name: input.name,
+        description: input.description,
         imageUrl: input.imageUrl,
         priceUsd: input.priceUsd,
         stock: input.stock,

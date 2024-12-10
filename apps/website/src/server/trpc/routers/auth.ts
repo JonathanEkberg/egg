@@ -155,9 +155,8 @@ export const authRouter = createTRPCRouter({
       emailVerified: false,
       role: user.role,
     })
-    unstable_after(() => {
-      sendUserEmailVerificationCode(user.id, user.email, user.name)
-    })
+
+    // await sendUserEmailVerificationCode(user.id, user.email, user.name)
 
     const { id, name, email, role, emailVerified } = user
     return { id, name, email, role, emailVerified }
@@ -220,9 +219,7 @@ export const authRouter = createTRPCRouter({
       })
     }
 
-    unstable_after(() => {
-      sendUserEmailVerificationCode(userId, email, name)
-    })
+    // await sendUserEmailVerificationCode(userId, email, name)
 
     return { id: userId, name: existing.name, email, role, emailVerified }
   }),
